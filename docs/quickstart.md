@@ -29,6 +29,14 @@ Additionally, also install `webpack` and `docsify`
 npm i -g webpack webpack-cli docsify-cli
 ```
 
+## Run the Tetris Server
+
+Run the following code and then in your browser visit http://localhost:3000
+
+```bash
+npm start
+```
+
 ## Developing Features
 
 To incorporate your own changes, edit files under scripts and then compile them by typing the following command and the project's root directory. All changes under `/scripts` will be autocompiled into `/dist/bundle.js`

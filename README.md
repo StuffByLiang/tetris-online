@@ -1,6 +1,3 @@
-# tetris-online
-A real-time Tetris game written in JavaScript using node.js and socket.io
-
 # Quick start
 
 ## Prerequisites
@@ -30,6 +27,14 @@ Additionally, also install `webpack` and `docsify`
 
 ```bash
 npm i -g webpack webpack-cli docsify-cli
+```
+
+## Run the Tetris Server
+
+Run the following code and then in your browser visit http://localhost:3000
+
+```bash
+npm start
 ```
 
 ## Developing Features
