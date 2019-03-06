@@ -1,3 +1,7 @@
+# tetris-online
+
+A real-time Tetris game written in JavaScript using node.js and socket.io
+
 # Quick start
 
 ## Prerequisites
