@@ -1,0 +1,51 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<style>
+#boardCanvas {
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="documentReady()">
+<canvas id="holdCanvas" width="98" height="98" style="float: left; margin-right: 10px; "></canvas>
+<canvas id="boardCanvas" width="240" height="428" style="float: left; margin-right: 10px; "></canvas>
+<canvas id="playerIncomingCanvas" width="4" height="530" style="float: left;"></canvas>
+<canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+
+<script>
+function documentReady() {
+    tetrisBoard.start();
+    tetrisBoard.drawGrid();
+
+    for(var x = -1; x <= 10; x++) {// every row
+      game.boardPosition[x] = [];
+        for(var y = -1; y<= 22; y++) { //go through every block in the row
+            game.boardPosition[x][y] = 0;
+
+            //outside boundary set to 1
+            if(x == -1 || x == 10 || y == -1 || y == 22){
+                game.boardPosition[x][y] = 1;
+            }
+        }
+    }
+
+    begin = false;
+}
+
+function getRecord() {
+    document.getElementById("record").innerHTML = record.boardPosition + '+' + record.linesSent;
+}
+
+</script>
+<script src="dist/bundle.js"></script>
+<button id="new_game" onclick="game.newGame()">New Game</button>
+<button id="getString" onclick="getRecord()">Get record</button>
+<textarea id="record"></textarea>
+<div id="line"></div>
+
+</body>
+</html>

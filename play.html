@@ -1,0 +1,83 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<style>
+#boardCanvas {
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="drawBoard()">
+<canvas id="holdCanvas" width="98" height="98" style="float: left; margin-right: 10px; "></canvas>
+<canvas id="boardCanvas" width="240" height="428" style="float: left; margin-right: 10px; "></canvas>
+<canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
+
+<script src="scripts/settings.js"></script>
+<script src="scripts/game.js"></script>
+<script src="scripts/tetrisBoard.js"></script>
+<script src="scripts/draw.js"></script>
+<script src="scripts/controls.js"></script>
+<script src="scripts/shuffle.js"></script>
+<script src="scripts/shadeColor.js"></script>
+<script src="scripts/record.js"></script>
+
+<script>
+//draw board after page load
+function drawBoard() {
+    tetrisBoard.start();
+    tetrisBoard.drawGrid();
+}
+
+function newGame() {
+    //DISABLE BUTTON
+    document.getElementById("new_game").disabled = true;
+
+    record.startTime = (new Date).getTime(); //set the time in which game starts
+
+    game.randomizeBag();
+
+    for(var x = -1; x <= 10; x++) {// every row
+    game.boardPosition[x] = [];
+        for(var y = -1; y<= 22; y++) { //go through every block in the row
+            game.boardPosition[x][y] = 0;
+
+            //outside boundary set to 1
+            if(x == -1 || x == 10 || y == -1 || y == 22){
+                game.boardPosition[x][y] = 1;
+            }
+        }
+    }
+
+    game.spawnPiece();
+    game.piece.update();
+    game.drawQueue();
+}
+
+function getRecord() {
+    document.getElementById("record").innerHTML = record.boardPosition + '+' + record.linesSent;
+}
+
+//[player]
+var player = {
+    currentBag : 0,
+    currentPiece : 0,
+    currentPieceName : "",
+    canHold : true,
+    currentHoldPiece : "",
+    firstHold : false,
+    b2b : false,
+    tspinRotate: false,
+    combo : 0,
+    linesSent: 0
+};
+
+
+</script>
+<button id="new_game" onclick="newGame()">New Game</button>
+<button id="getString" onclick="getRecord()">Get record</button>
+<textarea id="record"></textarea>
+<div id="line"></div>
+
+</body>
+</html>
