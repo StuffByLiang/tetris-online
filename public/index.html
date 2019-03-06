@@ -15,8 +15,13 @@
       var socket = io();
 
       function sendNudes() {
-        socket.emit("sendnudes", "Meidy's nudes");
+        socket.emit("sendnudes", "Meidy's nudes.jpg ");
       }
+
+      socket.on('sendnudes', function(nudes){
+        $('body').append(nudes);
+      });
+
     </script>
   </body>
 </html>

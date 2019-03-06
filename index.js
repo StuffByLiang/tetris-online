@@ -33,7 +33,7 @@ io.on('connection', function(socket){
   socket.on("sendnudes", function(nudes) {
     console.log('message: ' + nudes)
 
-    io.emit('sendnudes', nudes);
+    socket.broadcast.emit('sendnudes', nudes);
 
   });
 
