@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "nodemon index.js",
-    "serve": "docsify serve docs --port 3001"
+    "docs": "docsify serve docs --port 3001"
   },
   "keywords": [],
   "author": "",

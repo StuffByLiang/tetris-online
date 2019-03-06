@@ -1,6 +1,7 @@
 - Getting Started
 
   - [Quick Start](/quickstart.md)
+  - [How To Contribute](/contribute.md)
 
 - Scripts
 
