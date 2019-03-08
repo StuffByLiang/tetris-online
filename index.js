@@ -25,8 +25,10 @@ var useramount = 0;
 
 // when user connects (basically opens the client)
 io.on('connection', function(socket){
-  players[socket.id] = new playerObject();
+  players[socket.id] = new playerObject(socket.id);
   console.log(players);
+
+  io.emit('newPlayer', players[socket.id]);
 
   // everything here will be custom events
   useramount++;
@@ -36,12 +38,6 @@ io.on('connection', function(socket){
     // when user disconnects
     useramount--;
     console.log('user disconnected: ' + useramount);
-  });
-
-  socket.on("sendnudes", function(nudes) {
-    console.log('message: ' + nudes)
-
-    socket.broadcast.emit('sendnudes', nudes);
   });
 
   socket.on("keydown", function(key) {

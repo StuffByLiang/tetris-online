@@ -7,7 +7,6 @@
     </style>
   </head>
   <body>
-    <button onclick="sendNudes()">SEND NUDES</button>
 
     <script src="/js/client.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -15,12 +14,8 @@
     <script>
       var socket = io();
 
-      function sendNudes() {
-        socket.emit("sendnudes", "Meidy's nudes.jpg ");
-      }
-
-      socket.on('sendnudes', function(nudes){
-        $('body').append(nudes);
+      socket.on('newPlayer', function(playerData){
+        console.log(playerData);
       });
 
     </script>

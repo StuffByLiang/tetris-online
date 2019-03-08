@@ -21,18 +21,6 @@ function documentReady() {
     tetrisBoard.start();
     tetrisBoard.drawGrid();
 
-    for(var x = -1; x <= 10; x++) {// every row
-      game.boardPosition[x] = [];
-        for(var y = -1; y<= 22; y++) { //go through every block in the row
-            game.boardPosition[x][y] = 0;
-
-            //outside boundary set to 1
-            if(x == -1 || x == 10 || y == -1 || y == 22){
-                game.boardPosition[x][y] = 1;
-            }
-        }
-    }
-
     begin = false;
 }
 
