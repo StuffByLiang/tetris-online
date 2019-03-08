@@ -1,13 +1,18 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var path = require('path');
+
+var game = require('./scripts/server/index.js');
+var playerObject = require('./scripts/server/player.js');
+
+var players = []; //server players
+
+app.use(express.static(path.join(__dirname,'public'))); //this code allows us to access anything in the public folder
 
 app.get('/boobs', function(req, res){
   res.send('<h1>Hello world</h1>');
-});
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/public/index.html');
 });
 
 http.listen(3000, function(){
@@ -20,6 +25,9 @@ var useramount = 0;
 
 // when user connects (basically opens the client)
 io.on('connection', function(socket){
+  players[socket.id] = new playerObject();
+  console.log(players);
+
   // everything here will be custom events
   useramount++;
   console.log('a user connected: ' + useramount);
@@ -34,7 +42,14 @@ io.on('connection', function(socket){
     console.log('message: ' + nudes)
 
     socket.broadcast.emit('sendnudes', nudes);
+  });
 
+  socket.on("keydown", function(key) {
+    console.log("keydown:" + key);
+  });
+
+  socket.on("keyup", function(key) {
+    console.log("keyup:" + key);
   });
 
 });
