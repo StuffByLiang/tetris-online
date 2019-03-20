@@ -1,8 +1,9 @@
 class Ghost {
-  constructor(piece, color) {
+  constructor(player, piece, color) {
     //create a new object in game
+    this.player = player;
     this.piece = piece;
-    this.color = shadeColor(color, -0.5);
+    this.color = game.shadeColor(color, -0.5);
     this.pieceName = player.currentPieceName;
     this.angle = piece.angle;
     this.rotations = piece.rotations[piece.angle];
@@ -16,20 +17,6 @@ class Ghost {
 
     while(!this.checkDown()) {
         this.y++;
-    }
-
-    //now draw
-    var myRotations = this.rotations.split('|');
-    draw.clearCanvas(tetrisBoard.canvas);
-    for(var i = 0; i <= 3; i++) {
-        var xx, yy, coordinates;
-
-        coordinates = myRotations[i].split(',');
-        xx = Number(coordinates[0]); //x pos of the block
-        yy = Number(coordinates[1]); //y pos of the block
-
-        draw.makeBlock(1 + (this.x) * 24, 1 + (this.y) * 24, xx, yy, this.color, tetrisBoard.canvas);
-
     }
   }
   checkDown() {
@@ -50,7 +37,7 @@ class Ghost {
         }
 
         //then check if the block is free near the piece, return true if there is collision
-        if(this.piece.player.boardPosition[this.x + xx][this.y + yy + 1] !== 0){
+        if(this.player.boardPosition[this.x + xx][this.y + yy + 1] !== 0){
             return true;
         }
     }

@@ -7,8 +7,6 @@ var path = require('path');
 //include game classes
 var Game = require('./newscripts/game/');
 var Player = require('./newscripts/player/');
-var Piece = require('./newscripts/game/piece/');
-var Ghost = require('./newscripts/game/ghost/');
 
 app.use(express.static(path.join(__dirname,'public'))); //this code allows us to access anything in the public folder
 
@@ -23,7 +21,14 @@ http.listen(3000, function(){
 // socket client/server communication starts here
 
 var useramount = 0;
-var game = new Game();
+
+global.settings = {
+    arr : 0,
+    das : 130,
+    gravity : 10
+};
+
+global.game = new Game(io);
 
 // when user connects (basically opens the client)
 io.on('connection', function(socket){
@@ -34,7 +39,10 @@ io.on('connection', function(socket){
 
   // start Game
   game.start( game.players[socket.id] );
-  io.emit('newPlayer', game.players[socket.id]);
+  io.emit('newPlayer', {
+    boardPosition: game.players[socket.id].boarsPosition,
+    id: socket.id
+  });
 
   // everything here will be custom events
   useramount++;
@@ -45,7 +53,6 @@ io.on('connection', function(socket){
     useramount--;
     console.log('user disconnected: ' + useramount);
   });
-
   socket.on("keydown", function(move) {
     if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
       // if an acceptable move (to prevent client hacking etc)
@@ -79,7 +86,6 @@ io.on('connection', function(socket){
       game.players[socket.id].pressed[move] = (new Date).getTime();
     }
   });
-
   socket.on("keyup", function(move) {
     if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
       // if an acceptable move (to prevent client hacking etc)

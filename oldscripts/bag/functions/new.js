@@ -1,4 +1,5 @@
 window.game.bag.new = function(bag) {
+  debugger;
     var bagLength = game.bag.currentBag.length;
 
     game.bag.currentBag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces

@@ -23,9 +23,47 @@
         id = socket.id;
       });
 
-      socket.on('newPlayer', function(playerData){
-        console.log(playerData);
-        update(playerData);
+      // socket.on('newPlayer', function(playerData){
+      //   console.log(playerData);
+      //   update(playerData);
+      // });
+
+      socket.on('update', function(data){
+        draw.clearCanvas(draw.boardCanvas);
+        draw.drawGrid();
+
+        console.log(data);
+        //ghost piece
+        var myRotations = data.piece.rotation.split('|');
+        draw.clearCanvas(draw.boardCanvas);
+        for(var i = 0; i <= 3; i++) {
+            var xx, yy, coordinates;
+
+            coordinates = myRotations[i].split(',');
+            xx = Number(coordinates[0]); //x pos of the block
+            yy = Number(coordinates[1]); //y pos of the block
+
+            draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas);
+        }
+
+
+        //draw pieces
+        myRotations = data.piece.rotation.split('|');
+        for(var i = 0; i <= 3; i++) {
+            var xx, yy, coordinates;
+
+            coordinates = myRotations[i].split(',');
+            xx = Number(coordinates[0]); //x pos of the block
+            yy = Number(coordinates[1]); //y pos of the block
+
+            color = draw.getPieceColor(data.piece.color);
+
+            draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas);
+        }
+
+        boardPosition[data.id] = data.boardPosition;
+        draw.drawBoard();
+
       });
       var boardPosition = [];
 

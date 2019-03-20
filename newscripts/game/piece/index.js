@@ -1,3 +1,5 @@
+var Ghost = require('./../ghost/');
+
 class Piece {
   constructor(player, x, y, pieceName, color, rotations) {
       //create a new object in game
@@ -14,14 +16,18 @@ class Piece {
       this.lowestLine = 0;
       this.rotationLimit = 0;
 
-      this.interval = setInterval(this.update, 1000);
+      this.interval = setInterval(this.update.bind(this), 10);
       this.lockDownTimer = false;
-      this.ghost = new Ghost(this, color)
+
+      var color = game.getPieceColor(color);
+      this.ghost = new Ghost(player, this, color);
   }
   update() {
       //update this piece and draw it
+      console.log("wooo piece updated")
       this.doGravity();
-      this.draw();
+      this.ghost.update();
+      game.draw(this.player);
   }
   doGravity() {
       //check if no collision down
@@ -36,7 +42,7 @@ class Piece {
               this.lockDownTimer = false;
           }
 
-          player.tspinRotate = false; //reset tspin
+          this.player.tspinRotate = false; //reset tspin
       }
 
       this.lockdown();
@@ -56,7 +62,6 @@ class Piece {
 
         draw.makeBlock(1 + (this.x) * 24, 1 + (this.y) * 24, xx, yy, color, tetrisBoard.canvas);
     }
-    game.ghost.update();
     game.drawBoard();
   }
   lockdown(direction) {
@@ -65,7 +70,7 @@ class Piece {
           if(this.rotationLimit > 15){
               this.die();
           }else if(!this.lockDownTimer){
-              this.lockDownTimer = setTimeout(this.die, 500);
+              this.lockDownTimer = setTimeout(this.die.bind(this), 500);
           }
       }else{
           clearTimeout(this.lockDownTimer);
@@ -86,11 +91,11 @@ class Piece {
               xx = Number(coordinates[0]);
               yy = Number(coordinates[1]);
 
-              game.boardPosition[this.x + xx][this.y + yy] = this.color; //set that position in the board to that color
+              this.player.boardPosition[this.x + xx][this.y + yy] = this.color; //set that position in the board to that color
 
           }
 
-          game.clearLines();
+          game.clearLines(this.player);
 
           record.recordBoardPosition();
           game.applyGarbage();
@@ -149,7 +154,7 @@ class Piece {
           }
 
           //then check if the block is free near the piece, return true if there is collision
-          if(game.boardPosition[this.x + xx + xChange][this.y + yy + yChange] !== 0){
+          if(this.player.boardPosition[this.x + xx + xChange][this.y + yy + yChange] !== 0){
               return true;
           }
 
@@ -180,7 +185,7 @@ class Piece {
           var xChange, yChange;
 
           // I PIECE
-          if(player.currentPieceName === "I") {
+          if(this.player.currentPieceName === "I") {
               //this if statement checks the database for the position y
               if((this.angle === 0 && direction === 1)||(this.angle === 3 && direction === -1)||(this.angle === 1 && direction === -1)||(this.angle === 2 && direction === 1)) {
                   switch(ii) {

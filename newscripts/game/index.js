@@ -1,7 +1,13 @@
+var Piece = require('./piece/');
+var Send = require('./send/');
+
 class Game {
-  constructor() {
+  constructor(io) {
+    this.io = io;
     this.players = [];
     this.bag = [];
+
+    //this.send = new Send();
   }
   getPlayer(id) {
     return this.players[id];
@@ -19,26 +25,9 @@ class Game {
       //
       // record.startTime = (new Date).getTime(); //set the time in which game starts
 
-      player.bag.currentBag = [];
-
-      player.bag.new();
-
-      for(var x = -1; x <= 10; x++) {// every row
-        player.boardPosition[x] = [];
-          for(var y = -1; y<= 22; y++) { //go through every block in the row
-              player.boardPosition[x][y] = 0;
-
-              //outside boundary set to 1
-              if(x == -1 || x == 10 || y == -1 || y == 22){
-                  player.boardPosition[x][y] = 1;
-              }
-          }
-      }
-
-      player.spawnPiece();
-      player.piece.update();
-      player.drawQueue();
-      player.drawHold();
+      this.spawnPiece(player);
+      // game.drawQueue();
+      // game.drawHold();
     }
   }
   checkLoss(player) {
@@ -93,8 +82,14 @@ class Game {
   }
   spawnPiece(player) {
       //spawn a piece from the currentPiece position in the currentBag
-      var color, rotations;
-      var bagPieces = this.bag.currentBag[player.currentBag].split(',');
+
+      // check if a new bag needs to be created, if so, then create it
+      if(this.bag[player.currentBag + 1] == undefined)
+        this.newBag();
+
+      console.log(this.bag); // debug
+
+      var bagPieces = this.bag[player.currentBag].split(',');
 
       player.currentPieceName = bagPieces[player.currentPiece]; //set currentPieceName
 
@@ -106,41 +101,35 @@ class Game {
       }
 
       //this sets the rotations and color of the specific piece
-      rotations = player.getPieceRotation(player.currentPieceName);
-      color = player.getPieceNumber(player.currentPieceName);
+      var color, rotations;
+      rotations = this.getPieceRotation(player.currentPieceName);
+      color = this.getPieceNumber(player.currentPieceName);
 
-      this.piece = new this.pieceObject(3, -1, player.currentPieceName, color, rotations); //create piece
-
-      color = player.getPieceColor(color);
-
-      this.ghost = new this.ghostObject(color);
-
+      player.piece = new Piece(player, 3, -1, player.currentPieceName, color, rotations); //create piece
 
       //set gravity if down is pressed
-
-      if(key.pressed[key.down] > 0) {
+      if(player.pressed["softDrop"] > 0) {
           //check if no collision down and if so, set soft drop
-          if(!game.piece.checkCollision(1)){
-              clearInterval(game.piece.interval);
-              game.piece.interval = setInterval(game.piece.gravityInterval, settings.gravity);
+          if(!player.piece.checkCollision(1)){
+              clearInterval(player.piece.interval);
+              player.piece.interval = setInterval(player.piece.gravityInterval.bind(player), settings.gravity);
           }
       }
 
       //move down instantly if its free
-      if(!this.piece.checkCollision(1)){
-          this.piece.y++;
+      if(!player.piece.checkCollision(1)){
+          player.piece.y++;
 
           //reset lockdown timer and rotation limit if reach a new lowest line
-          if(this.piece.y > this.piece.lowestLine){
-              this.piece.lowestLine = this.piece.y;
-              this.rotationLimit = 0;
-              clearTimeout(this.piece.lockDownTimer);
+          if(player.piece.y > player.piece.lowestLine){
+              player.piece.lowestLine = player.piece.y;
+              player.rotationLimit = 0;
+              clearTimeout(player.piece.lockDownTimer);
           }
       }
 
-      game.ghost.update();
-      game.piece.update();
-      game.drawBoard();
+      player.piece.update();
+      // game.drawBoard();
 
       //set canHold = true because new piece has spawned
       if(!player.canHold && !player.firstHold) {
@@ -224,14 +213,14 @@ class Game {
   clearLines(player) {
       var cleared = 0;
 
-      var tspin = game.checkTspin();
+      var tspin = game.checkTspin(player);
       //clear lines
 
       //loop through rows, starting from the bottom
       for(var y = 21; y >= 0; y--) {
           var check = 0;//this variable checks for blocks that are filled in the row
           for(var x = 0; x <= 9; x++) {
-              if(game.boardPosition[x][y] !== 0){
+              if(player.boardPosition[x][y] !== 0){
                   check++;
               }
           }
@@ -242,17 +231,17 @@ class Game {
 
               //clear the row
               for(x = 0; x <= 9; x++) {
-                  if(game.boardPosition[x][y] !== 0){
-                     game.boardPosition[x][y] = 0;
+                  if(player.boardPosition[x][y] !== 0){
+                     player.boardPosition[x][y] = 0;
                   }
               }
               for(var yy = y; yy >= 0; yy--) {
                   for(var xx = 0; xx <= 9; xx++) {
                       //copy the row from one above (unless its the very top row, then clear all of that)
                       if(yy!=0){
-                          game.boardPosition[xx][yy] = game.boardPosition[xx][yy - 1];
+                          player.boardPosition[xx][yy] = player.boardPosition[xx][yy - 1];
                       }else{
-                          game.boardPosition[xx][yy] = 0;
+                          player.boardPosition[xx][yy] = 0;
                       }
                   }
               }
@@ -267,7 +256,7 @@ class Game {
           player.combo = 0;
       }
 
-      game.sendLines(cleared, tspin); //send line function which also recognizes line clears
+      game.sendLines(player, cleared, tspin); //send line function which also recognizes line clears
 
       player.tspinRotate = false; //reset tspin
   }
@@ -280,7 +269,7 @@ class Game {
           }
 
           //top left
-          if(game.boardPosition[game.piece.x + 0][game.piece.y + 1]){
+          if(player.boardPosition[game.piece.x + 0][game.piece.y + 1]){
               var i = 0 - game.piece.angle;
               if(i < 0){
                   i = 4 + i;
@@ -288,7 +277,7 @@ class Game {
               corner[i] = true;
           }
           //top right
-          if(game.boardPosition[game.piece.x + 2][game.piece.y + 1]){
+          if(player.boardPosition[game.piece.x + 2][game.piece.y + 1]){
               var i = 1 - game.piece.angle;
               if(i < 0){
                   i = 4 + i;
@@ -296,7 +285,7 @@ class Game {
               corner[i] = true;
           }
           //bottom right
-          if(game.boardPosition[game.piece.x + 2][game.piece.y + 3]){
+          if(player.boardPosition[game.piece.x + 2][game.piece.y + 3]){
               var i = 2 - game.piece.angle;
               if(i < 0){
                   i = 4 + i;
@@ -304,7 +293,7 @@ class Game {
               corner[i] = true;
           }
           //bottom left
-          if(game.boardPosition[game.piece.x + 0][game.piece.y + 3]){
+          if(player.boardPosition[game.piece.x + 0][game.piece.y + 3]){
               var i = 3 - game.piece.angle;
               corner[i] = true;
           }
@@ -358,7 +347,7 @@ class Game {
       for(var y = 21; y >= 18; y--) {
           var check = 0; //blocks in a row
           for(var x = 0; x <= 9; x++) {
-              if(game.boardPosition[x][y] != ""){
+              if(player.boardPosition[x][y] != ""){
                   check++;
               }
           }
@@ -574,6 +563,45 @@ class Game {
       var f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
       return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
   }
+  getPieceColor(piece) {
+    switch(piece){
+        case 1:
+            return "#69BE28";
+        case 2:
+            return "#ED2939";
+        case 3:
+            return "#009FDA";
+        case 4:
+            return "#952D98";
+        case 5:
+            return "#0065BD";
+        case 6:
+            return "#FF7900";
+        case 7:
+            return "#FECB00";
+        case 8:
+            return "#696969";
+    }
+  }
 
+  //draw
+  draw(player) {
+    // console.log(player);
+    var data = {
+      id: player.id,
+      ghost: {
+        y: player.piece.ghost.y,
+        color: player.piece.ghost.color
+      },
+      piece: {
+        rotation: player.piece.rotations[player.piece.angle],
+        x: player.piece.x,
+        y: player.piece.y,
+        color: player.piece.color
+      },
+      boardPosition: player.boardPosition
+    }
+    this.io.emit("update", data);
+  }
 }
 module.exports = Game;
