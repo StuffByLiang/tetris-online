@@ -7,16 +7,34 @@
     </style>
   </head>
   <body>
+    <canvas id="holdCanvas" width="98" height="98" style="float: left; margin-right: 10px;"></canvas>
+    <canvas id="boardCanvas" width="240" height="428" style="float: left; margin-right: 10px;"></canvas>
+    <canvas id="playerIncomingCanvas" width="4" height="530" style="float: left;"></canvas>
+    <canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
 
     <script src="/js/client.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       var socket = io();
+      var id;
+
+      socket.on('connect', function() {
+        id = socket.id;
+      });
 
       socket.on('newPlayer', function(playerData){
         console.log(playerData);
+        update(playerData);
       });
+      var boardPosition = [];
+
+      function update(playerData) {
+        draw.clearCanvas(draw.boardCanvas);
+        draw.drawGrid();
+        boardPosition[playerData.id] = playerData.boardPosition;
+        draw.drawBoard();
+      }
 
     </script>
   </body>
