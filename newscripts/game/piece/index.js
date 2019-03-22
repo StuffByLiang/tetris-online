@@ -97,7 +97,6 @@ class Piece {
           game.clearLines(this.player);
 
           game.recordBoardPosition(this.player);
-          game.applyGarbage(this.player);
 
           if(game.checkLoss(this.player)) {
             console.log("YOU FUCKING LOST");

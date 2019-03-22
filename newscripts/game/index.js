@@ -312,9 +312,10 @@ class Game {
           player.combo++;
       }else{
           player.combo = 0;
+          game.applyGarbage(player); //apply garbage if no lines have been sent
       }
 
-      game.sendLines(player, cleared, tspin); //send line function which also recognizes line clears
+      game.linesSent(player, cleared, tspin); //send line function which also recognizes line clears
 
       player.tspinRotate = false; //reset tspin
   }
@@ -370,7 +371,7 @@ class Game {
       }
       return "not";
   }
-  sendLines(player, cleared, tspin) {
+  linesSent(player, cleared, tspin) {
       var message = "";
       var linesSent = 0;
       //send combo lines
@@ -518,7 +519,15 @@ class Game {
         message: message
       }
 
-      this.io.to(player.id).emit("sendLines", data);
+      // if(linesSent > 0 && linesSent < player.incoming) {
+      //   player.incoming -= linesSent;
+      //   linesSent=0;
+      // } else if(linesSent > 0 && linesSent > player.incoming) {
+      //   linesSent -= player.incoming
+      //   player.incoming = ;
+      // }
+
+      this.io.to(player.id).emit("linesSent", data);
 
       //actually send lines
       this.iterate(otherPlayer => {
