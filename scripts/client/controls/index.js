@@ -13,12 +13,10 @@ window.key = {
 
   onKeyDown: function(event) {
       window.dokeydown(event.keyCode);
-      this.pressed[event.keyCode] = (new Date).getTime(); //set it to milliseconds
   },
 
   onKeyUp: function(event) {
       window.dokeyup(event.keyCode);
-      delete this.pressed[event.keyCode];
   }
 };
 

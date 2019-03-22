@@ -518,7 +518,14 @@ class Game {
         message: message
       }
 
-      this.io.emit("sendLines", data);
+      this.io.to(player.id).emit("sendLines", data);
+
+      //actually send lines
+      this.iterate(otherPlayer => {
+        //send to player if not self
+        if(otherPlayer.id != player.id && linesSent > 0)
+          otherPlayer.addToIncoming(linesSent);
+      });
   }
   losingGray(player) {
     for(var y = 0; y <= 21; y++){
@@ -530,7 +537,17 @@ class Game {
     }
     game.draw(player)
   }
-
+  clean(player) {
+    // when need to delete, we need to clear all intervals
+    clearInterval(player.piece.interval);
+  }
+  iterate(callback) {
+    //iterate through all players with a callback function
+    for(var playerId in this.players) {
+      var player = this.getPlayer(playerId);
+      callback(player);
+    }
+  }
 
   //garbage
   applyGarbage(player) {
@@ -707,7 +724,8 @@ class Game {
       },
       boardPosition: player.boardPosition,
       hold: player.currentHoldPiece,
-      queue: queue
+      queue: queue,
+      incoming: player.getTotalIncoming()
     }
     this.io.emit("update", data);
   }
@@ -751,5 +769,35 @@ class Game {
 
       player.linesSentRecord += tempstring;
   }
+
+  //garbage
+  addGarbage(player, linesSent) {
+      var random = Math.floor(Math.random() * 10)  // get random number from 0-9
+      //move every row up
+
+      for(var y = 0; y <= 20; y++) {
+          for(var x = 0; x <= 9; x++) {
+              //copy the row from one below it (unless its the very top row, then clear all of that)
+              player.boardPosition[x][y] = player.boardPosition[x][y + linesSent];
+          }
+      }
+
+      for(var y = 0; y< linesSent; y++){
+      	for(var x = 0; x<= 9; x++){
+            player.boardPosition[x][21-y] = 8;
+          }
+        player.boardPosition[random][21-y] = 0;
+      }
+
+      player.piece.update();
+  }
+  applyGarbage(player) {
+    for(var lines of player.incoming) {
+      game.addGarbage(player, lines);
+    }
+
+    player.incoming = [];
+  }
+
 }
 module.exports = Game;

@@ -38,12 +38,11 @@ class Player {
   }
   addToIncoming(lines) {
       this.incoming.push(lines);
-      draw.drawPlayerIncoming(); //editme
   }
   getTotalIncoming() {
     var total=0;
 
-    for(number of this.incoming) {
+    for(var number of this.incoming) {
       total += number;
     }
 

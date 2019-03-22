@@ -24,7 +24,7 @@ var useramount = 0;
 
 global.settings = {
     arr : 0,
-    das : 130,
+    das : 120,
     gravity : 10
 };
 
@@ -35,14 +35,21 @@ io.on('connection', function(socket){
   game.players[socket.id] = new Player(socket.id);
 
   // debug
-  console.log(game.players);
+  // console.log(game.players);
 
   // start Game
   game.start( game.players[socket.id] );
-  io.emit('newPlayer', {
-    boardPosition: game.players[socket.id].boardPosition,
-    id: socket.id
-  });
+
+  socket.broadcast.emit('newPlayer', [socket.id]); //send to everyone else that a new player has joined
+
+  var connectedPlayers = [];
+  for(var id in game.players) {
+    if(id != socket.id) {
+      //if id of player doesnt match the one that just joined, add it to connectedPlayers
+      connectedPlayers.push(id);
+    }
+  }
+  socket.emit('newPlayer', connectedPlayers) //send to the client that just joined a list of all connected players
 
   // everything here will be custom events
   useramount++;
@@ -51,7 +58,10 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
     // when user disconnects
     useramount--;
+    game.clean(game.getPlayer(socket.id));
+    delete game.players[socket.id]; //remove from game.players
     console.log('user disconnected: ' + useramount);
+    io.emit("deletePlayer", socket.id); //tell everyone to remove this player
   });
   socket.on("keydown", function(move) {
     if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
