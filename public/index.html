@@ -12,6 +12,8 @@
     <canvas id="playerIncomingCanvas" width="4" height="530" style="float: left;"></canvas>
     <canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
 
+    <div id="line"></div>
+
     <script src="/js/client.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -29,42 +31,50 @@
       // });
 
       socket.on('update', function(data){
-        draw.clearCanvas(draw.boardCanvas);
-        draw.drawGrid();
+        if(data.id == id) {
+          //detect if the data is the current player, then draw on the main board
+          draw.clearCanvas(draw.boardCanvas);
+          draw.drawGrid();
 
-        console.log(data);
-        //ghost piece
-        var myRotations = data.piece.rotation.split('|');
-        draw.clearCanvas(draw.boardCanvas);
-        for(var i = 0; i <= 3; i++) {
-            var xx, yy, coordinates;
+          console.log(data);
+          //ghost piece
+          var myRotations = data.piece.rotation.split('|');
+          draw.clearCanvas(draw.boardCanvas);
+          for(var i = 0; i <= 3; i++) {
+              var xx, yy, coordinates;
 
-            coordinates = myRotations[i].split(',');
-            xx = Number(coordinates[0]); //x pos of the block
-            yy = Number(coordinates[1]); //y pos of the block
+              coordinates = myRotations[i].split(',');
+              xx = Number(coordinates[0]); //x pos of the block
+              yy = Number(coordinates[1]); //y pos of the block
 
-            draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas);
+              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas);
+          }
+
+
+          //draw pieces
+          myRotations = data.piece.rotation.split('|');
+          for(var i = 0; i <= 3; i++) {
+              var xx, yy, coordinates;
+
+              coordinates = myRotations[i].split(',');
+              xx = Number(coordinates[0]); //x pos of the block
+              yy = Number(coordinates[1]); //y pos of the block
+
+              color = draw.getPieceColor(data.piece.color);
+
+              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas);
+          }
+
+          boardPosition[data.id] = data.boardPosition;
+          draw.drawBoard();
+
+          draw.drawHold(data.hold);
+          draw.drawQueue(data.queue);
         }
-
-
-        //draw pieces
-        myRotations = data.piece.rotation.split('|');
-        for(var i = 0; i <= 3; i++) {
-            var xx, yy, coordinates;
-
-            coordinates = myRotations[i].split(',');
-            xx = Number(coordinates[0]); //x pos of the block
-            yy = Number(coordinates[1]); //y pos of the block
-
-            color = draw.getPieceColor(data.piece.color);
-
-            draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas);
-        }
-
-        boardPosition[data.id] = data.boardPosition;
-        draw.drawBoard();
-
       });
+      socket.on('sendLines', function(data){
+        document.getElementById("line").innerHTML = data.message;
+      })
       var boardPosition = [];
 
       function update(playerData) {

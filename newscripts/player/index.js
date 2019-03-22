@@ -15,6 +15,9 @@ class Player {
     this.boardPosition = [ [], [] ]; //2d array
     this.pressed = {}; //pressed keys
     this.begin = false;
+    this.startTime = 0;
+    this.linesSentRecord = "";
+    this.boardPositionRecord = "";
 
     //sets up boardPosition
     for(var x = -1; x <= 10; x++) {// every row

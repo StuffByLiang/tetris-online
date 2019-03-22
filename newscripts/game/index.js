@@ -21,9 +21,8 @@ class Game {
         player.piece = null;
       }
 
-      // player = new playerObject();
-      //
-      // record.startTime = (new Date).getTime(); //set the time in which game starts
+      // player = new playerObject();W
+      player.startTime = (new Date).getTime(); //set the time in which game starts
 
       this.spawnPiece(player);
       // game.drawQueue();
@@ -43,22 +42,111 @@ class Game {
     return check;
   }
   moveLeft(player) {
+    player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this, player) , settings.das);
+    //check if no collision left
+    if(!player.piece.checkCollision(2)){
+        player.piece.rotationLimit++; //lock down rotation limit
+        clearTimeout(player.piece.lockDownTimer);
+        player.piece.lockDownTimer = false;
 
+        player.tspinRotate = false; //clear tspin rotate, not tpsin if move left/right
+
+        player.piece.lockdown();
+
+        player.piece.x--;
+        player.piece.update();
+    }
+    delete player.pressed["moveRight"];
+  }
+  doMoveLeft(player) {
+    if(player.pressed["moveLeft"] > 0) {
+        if(!player.piece.checkCollision(2)){
+            player.tspinRotate = false; //not tspin if moved
+
+            player.piece.lockdown();
+
+            player.piece.x--;
+            player.piece.update();
+        }
+        player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this, player), settings.arr);
+    }
   }
   rotateRight(player) {
+    if(player.piece.canRotate(1)) {
 
+        player.piece.rotationLimit++; //lock down rotation limit
+        clearTimeout(player.piece.lockDownTimer);
+        player.piece.lockDownTimer = false;
+
+        player.piece.angle++;
+        if(player.piece.angle > 3){
+            player.piece.angle = 0;
+        }
+
+        player.tspinRotate = true; //detect rotate
+
+        player.piece.lockdown();
+
+        player.piece.update();
+    }
   }
   moveRight(player) {
+    player.canMoveRight = setTimeout(this.doMoveRight.bind(this, player) , settings.das);
+    //check if no collision left
+    if(!player.piece.checkCollision(0)){
+        player.piece.rotationLimit++; //lock down rotation limit
+        clearTimeout(player.piece.lockDownTimer);
+        player.piece.lockDownTimer = false;
 
+        player.tspinRotate = false; //clear tspin rotate, not tpsin if move left/right
+
+        player.piece.lockdown();
+
+        player.piece.x++;
+        player.piece.update();
+    }
+    delete player.pressed["moveLeft"];
+  }
+  doMoveRight(player) {
+    if(player.pressed["moveRight"] > 0) {
+        if(!player.piece.checkCollision(0)){
+            player.tspinRotate = false; //not tspin if moved
+
+            player.piece.lockdown();
+
+            player.piece.x++;
+            player.piece.update();
+        }
+        player.canMoveRight = setTimeout(this.doMoveRight.bind(this, player), settings.arr);
+    }
   }
   softDrop(player) {
+    //check if no collision down
+    if(!player.piece.checkCollision(1)){
+        clearInterval(player.piece.interval);
+        player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
 
+        player.piece.y++;
+
+        //reset lockdown timer and rotation limit if reach a new lowest line
+        if(player.piece.y > player.piece.lowestLine){
+            player.piece.lowestLine = player.piece.y;
+            player.piece.rotationLimit = 0;
+            clearTimeout(player.piece.lockDownTimer);
+            player.piece.lockDownTimer = false;
+        }
+
+        player.tspinRotate = false; //not tspin if move down
+
+        player.piece.lockdown();
+
+        player.piece.update();
+    }
   }
   rotateLeft(player) {
-    if(!player.isPressed("rotateLeft")) {
-      if(player.piece.canRotate(-1)) {
+    if(player.piece.canRotate(-1)) {
 
-        player.player.piece.rotationLimit++; //lock down rotation limit
+        player.piece.rotationLimit++; //lock down rotation limit
         clearTimeout(player.piece.lockDownTimer);
         player.piece.lockDownTimer = false;
 
@@ -71,33 +159,38 @@ class Game {
 
         player.piece.lockdown();
 
-        player.ghost.update();
         player.piece.update();
-        player.drawBoard();
-      }
     }
   }
   hardDrop(player) {
-
+    //check if no collision left
+    while(!player.piece.checkCollision(1)) {
+        player.tspinRotate = false; //reset tspin
+        player.piece.y++;
+    }
+    player.piece.update();
+    player.piece.die();
   }
-  spawnPiece(player) {
-      //spawn a piece from the currentPiece position in the currentBag
+  spawnPiece(player, hold) {
+      //spawn a piece
 
-      // check if a new bag needs to be created, if so, then create it
-      if(this.bag[player.currentBag + 1] == undefined)
-        this.newBag();
+      if(hold === undefined) {
+        // check if a new bag needs to be created, if so, then create it
+        if(this.bag[player.currentBag + 1] == undefined)
+          this.newBag();
 
-      console.log(this.bag); // debug
+        // console.log(this.bag); // debug
 
-      var bagPieces = this.bag[player.currentBag].split(',');
+        var bagPieces = this.bag[player.currentBag].split(',');
 
-      player.currentPieceName = bagPieces[player.currentPiece]; //set currentPieceName
+        player.currentPieceName = bagPieces[player.currentPiece]; //set currentPieceName
 
-      player.currentPiece++;
+        player.currentPiece++;
 
-      if (player.currentPiece >= 7){
-          player.currentPiece = 0;
-          player.currentBag++;
+        if (player.currentPiece >= 7){
+            player.currentPiece = 0;
+            player.currentBag++;
+        }
       }
 
       //this sets the rotations and color of the specific piece
@@ -112,7 +205,7 @@ class Game {
           //check if no collision down and if so, set soft drop
           if(!player.piece.checkCollision(1)){
               clearInterval(player.piece.interval);
-              player.piece.interval = setInterval(player.piece.gravityInterval.bind(player), settings.gravity);
+              player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
           }
       }
 
@@ -132,11 +225,12 @@ class Game {
       // game.drawBoard();
 
       //set canHold = true because new piece has spawned
-      if(!player.canHold && !player.firstHold) {
-          player.firstHold = true;
-      }else{
-          player.canHold = true;
-      }
+      if(hold === undefined)
+        if(!player.canHold && !player.firstHold) {
+            player.firstHold = true;
+        }else{
+            player.canHold = true;
+        }
 
   }
   hold(player) {
@@ -148,65 +242,29 @@ class Game {
               player.currentHoldPiece = player.currentPieceName;
 
               //clear current piece settings
-              clearInterval(this.piece.interval);
-              clearTimeout(this.piece.lockDownTimer);
-              this.piece.lockDownTimer = false;
+              clearInterval(player.piece.interval);
+              clearTimeout(player.piece.lockDownTimer);
+              player.piece.lockDownTimer = false;
 
               //spawn a new piece
-              this.spawnPiece();
-
-              this.drawHold(player.currentHoldPiece);
-              this.drawQueue();
+              this.spawnPiece(player);
 
           }else {
               //set canShift = false until a new piece is spawned
               player.canHold = false;
 
-              player.currentHoldPiece = [player.currentPieceName, player.currentPieceName =   player.currentHoldPiece][0]; //swap two variables
+              player.currentHoldPiece = [player.currentPieceName, player.currentPieceName = player.currentHoldPiece][0]; //swap two variables
 
               //clear current piece settings
-              clearInterval(this.piece.interval);
-              clearTimeout(this.piece.lockDownTimer);
-              this.piece.lockDownTimer = false;
+              clearInterval(player.piece.interval);
+              clearTimeout(player.piece.lockDownTimer);
+              player.piece.lockDownTimer = false;
 
-              this.drawHold(player.currentHoldPiece);
+              // this.drawHold(player.currentHoldPiece);
 
               //now spawn piece
 
-              //this sets the rotations and color of the specific piece
-              var rotations = game.getPieceRotation(player.currentPieceName);
-              var color = game.getPieceNumber(player.currentPieceName);
-
-              this.piece = new this.pieceObject(3, -1, player.currentPieceName, color, rotations); //create piece
-              color = game.getPieceColor(color);
-              this.ghost = new this.ghostObject(color); //create ghost
-
-              //set gravity if down is pressed
-
-              if(key.pressed[key.down] > 0) {
-                  //check if no collision down and if so, set soft drop
-                  if(!game.piece.checkCollision(1)){
-                      clearInterval(game.piece.interval);
-                      game.piece.interval = setInterval(game.piece.gravityInterval, 75);
-                  }
-              }
-
-              //move down instantly if its free
-              if(!this.piece.checkCollision(1)){
-                  this.piece.y++;
-
-                  //reset lockdown timer and rotation limit if reach a new lowest line
-                  if(this.piece.y > this.piece.lowestLine){
-                      this.piece.lowestLine = this.piece.y;
-                      this.rotationLimit = 0;
-                      clearTimeout(this.piece.lockDownTimer);
-                  }
-              }
-
-              game.ghost.update();
-              game.piece.update();
-              game.drawBoard();
-
+              this.spawnPiece(player, "hold");
           }
       }
   }
@@ -269,32 +327,32 @@ class Game {
           }
 
           //top left
-          if(player.boardPosition[game.piece.x + 0][game.piece.y + 1]){
-              var i = 0 - game.piece.angle;
+          if(player.boardPosition[player.piece.x + 0][player.piece.y + 1]){
+              var i = 0 - player.piece.angle;
               if(i < 0){
                   i = 4 + i;
               }
               corner[i] = true;
           }
           //top right
-          if(player.boardPosition[game.piece.x + 2][game.piece.y + 1]){
-              var i = 1 - game.piece.angle;
+          if(player.boardPosition[player.piece.x + 2][player.piece.y + 1]){
+              var i = 1 - player.piece.angle;
               if(i < 0){
                   i = 4 + i;
               }
               corner[i] = true;
           }
           //bottom right
-          if(player.boardPosition[game.piece.x + 2][game.piece.y + 3]){
-              var i = 2 - game.piece.angle;
+          if(player.boardPosition[player.piece.x + 2][player.piece.y + 3]){
+              var i = 2 - player.piece.angle;
               if(i < 0){
                   i = 4 + i;
               }
               corner[i] = true;
           }
           //bottom left
-          if(player.boardPosition[game.piece.x + 0][game.piece.y + 3]){
-              var i = 3 - game.piece.angle;
+          if(player.boardPosition[player.piece.x + 0][player.piece.y + 3]){
+              var i = 3 - player.piece.angle;
               corner[i] = true;
           }
 
@@ -313,6 +371,7 @@ class Game {
       return "not";
   }
   sendLines(player, cleared, tspin) {
+      var message = "";
       var linesSent = 0;
       //send combo lines
       switch(player.combo){
@@ -341,7 +400,7 @@ class Game {
           default:
               linesSent += 5;
       }
-      document.getElementById("line").innerHTML = "Combo: " + player.combo.toString() + "<BR>";
+      message = "Combo: " + player.combo.toString() + "<BR>";
 
       //detect perfect clear
       for(var y = 21; y >= 18; y--) {
@@ -356,7 +415,7 @@ class Game {
               break;
           }else if(y == 18){
               linesSent += 10;
-              document.getElementById("line").innerHTML += "PERFECT CLEAR!!!!!!!!!!!!!<BR>";
+              message += "PERFECT CLEAR!!!!!!!!!!!!!<BR>";
               player.b2b = false;
           }
       }
@@ -367,26 +426,26 @@ class Game {
           //calculate back to backs
           if(player.b2b == true && cleared == 4){
               linesSent += 6;
-              document.getElementById("line").innerHTML += "Back to back TETRIS!!!<BR>";
+              message += "Back to back TETRIS!!!<BR>";
           }else if(player.b2b == true && tspin != "not"){
              switch(tspin){
               case "mini":
                       linesSent += 2;
-                      document.getElementById("line").innerHTML += "Back to back T-spin mini!!!<BR>";
+                      message += "Back to back T-spin mini!!!<BR>";
                   break;
               case "tspin":
                   switch(cleared){
                       case 1:
                           linesSent += 3;
-                          document.getElementById("line").innerHTML += "Back to back T-spin single!!!<BR>";
+                          message += "Back to back T-spin single!!!<BR>";
                           break;
                       case 2:
                           linesSent += 6;
-                          document.getElementById("line").innerHTML += "Back to back T-spin double!!!<BR>";
+                          message += "Back to back T-spin double!!!<BR>";
                           break;
                       case 3:
                           linesSent += 9;
-                          document.getElementById("line").innerHTML += "Back to back T-spin triple!!!<BR>";
+                          message += "Back to back T-spin triple!!!<BR>";
                           break;
                   }
                   break;
@@ -397,21 +456,21 @@ class Game {
               switch(cleared){
                   case 1:
                       player.b2b = false;
-                      document.getElementById("line").innerHTML += "single<BR>";
+                      message += "single<BR>";
                       break;
                   case 2:
                       linesSent += 1;
                       player.b2b = false;
-                      document.getElementById("line").innerHTML += "double!<BR>";
+                      message += "double!<BR>";
                       break;
                   case 3:
                       linesSent += 2;
                       player.b2b = false;
-                      document.getElementById("line").innerHTML += "Triple!!<BR>";
+                      message += "Triple!!<BR>";
                       break;
                   case 4:
                       linesSent += 4;
-                      document.getElementById("line").innerHTML += "Tetris!!!!!<BR>";
+                      message += "Tetris!!!!!<BR>";
                       player.b2b = true;
                       break;
               }
@@ -423,21 +482,21 @@ class Game {
                           linesSent += 1;
                           player.b2b = true;
                       }
-                      document.getElementById("line").innerHTML += "T-spin mini<BR>";
+                      message += "T-spin mini<BR>";
                       break;
                   case "tspin":
                       switch(cleared){
                           case 1:
                               linesSent += 2;
-                              document.getElementById("line").innerHTML += "T-spin single!<BR>";
+                              message += "T-spin single!<BR>";
                               break;
                           case 2:
                               linesSent += 3;
-                              document.getElementById("line").innerHTML += "T-spin double!!!<BR>";
+                              message += "T-spin double!!!<BR>";
                               break;
                           case 3:
                               linesSent += 4;
-                              document.getElementById("line").innerHTML += "T-spin triple!!!!!<BR>";
+                              message += "T-spin triple!!!!!<BR>";
                               break;
                       }
                       player.b2b = true;
@@ -449,11 +508,38 @@ class Game {
       player.linesSent += linesSent;
 
       if(cleared > 0){
-          record.recordLinesSent(linesSent); //record lines sent
+          game.recordLinesSent(player, linesSent); //record lines sent
       }
 
-      document.getElementById("line").innerHTML += "lines sent: " + linesSent + "<br>";
-      document.getElementById("line").innerHTML += "total lines sent: " + player.linesSent;
+      message += "lines sent: " + linesSent + "<br>";
+      message += "total lines sent: " + player.linesSent;
+
+      var data = {
+        message: message
+      }
+
+      this.io.emit("sendLines", data);
+  }
+  losingGray(player) {
+    for(var y = 0; y <= 21; y++){
+        for(var x = 0; x <=9; x++){
+            if(player.boardPosition[x][y] != 0){
+                player.boardPosition[x][y] = 8;
+            }
+        }
+    }
+    game.draw(player)
+  }
+
+
+  //garbage
+  applyGarbage(player) {
+      for(var lines of player.incoming) {
+        game.addGarbage(player, lines);
+      }
+
+      player.incoming = [];
+      // game.draw(player);
   }
 
   // bag
@@ -587,6 +673,26 @@ class Game {
   //draw
   draw(player) {
     // console.log(player);
+
+    var queue = [],
+        playerCurrentPiece = player.currentPiece,
+        playerCurrentBag = player.currentBag;
+
+    for(var i=0; i<4; i++) {
+      //get the next 4 pieces in the bag
+      var bagPieces = this.bag[playerCurrentBag].split(','); //get current bag pieces
+
+      queue.push(bagPieces[playerCurrentPiece])
+
+      playerCurrentPiece++; //increment currentPiece;
+
+      //if at the end of the current bag, go to the next bag
+      if (playerCurrentPiece >= 7){
+          playerCurrentPiece = 0;
+          playerCurrentBag++;
+      }
+    }
+
     var data = {
       id: player.id,
       ghost: {
@@ -599,9 +705,51 @@ class Game {
         y: player.piece.y,
         color: player.piece.color
       },
-      boardPosition: player.boardPosition
+      boardPosition: player.boardPosition,
+      hold: player.currentHoldPiece,
+      queue: queue
     }
     this.io.emit("update", data);
+  }
+
+  //record
+  recordBoardPosition(player) {
+      //record board
+      var tempstring = "";
+      var time = 0;
+
+      //get position
+      for(var y=0; y <= 21; y++) {// every row
+          for(var x=0; x<= 9; x++) { //go through every block in the row)
+              if(player.boardPosition[x][y] > 0){ //if there is a block
+                  tempstring += player.boardPosition[x][y];
+              }
+              tempstring += ".";
+          }
+      }
+
+      //get time interval
+
+      time = (new Date).getTime() - player.startTime;
+
+      tempstring += "," + time + "|";
+
+      player.boardPositionRecord += tempstring;
+  }
+  recordLinesSent(player, lines) {
+      //record board
+      var tempstring = "";
+      var time = 0;
+
+      tempstring += lines.toString() + ',';
+
+      //get time interval
+
+      time = (new Date).getTime() - player.startTime;
+
+      tempstring +=  time + "|";
+
+      player.linesSentRecord += tempstring;
   }
 }
 module.exports = Game;

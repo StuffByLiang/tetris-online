@@ -16,7 +16,7 @@ class Piece {
       this.lowestLine = 0;
       this.rotationLimit = 0;
 
-      this.interval = setInterval(this.update.bind(this), 10);
+      this.interval = setInterval(this.doGravity.bind(this), 1000);
       this.lockDownTimer = false;
 
       var color = game.getPieceColor(color);
@@ -24,8 +24,6 @@ class Piece {
   }
   update() {
       //update this piece and draw it
-      console.log("wooo piece updated")
-      this.doGravity();
       this.ghost.update();
       game.draw(this.player);
   }
@@ -46,6 +44,7 @@ class Piece {
       }
 
       this.lockdown();
+      this.update()
   }
   draw() {
     //get current angle and positions
@@ -97,15 +96,14 @@ class Piece {
 
           game.clearLines(this.player);
 
-          record.recordBoardPosition();
-          game.applyGarbage();
+          game.recordBoardPosition(this.player);
+          game.applyGarbage(this.player);
 
-          if(game.checkLoss()) {
+          if(game.checkLoss(this.player)) {
             console.log("YOU FUCKING LOST");
-            game.losingGray();
+            game.losingGray(this.player);
           } else {
-            game.spawnPiece();
-            game.drawQueue();
+            game.spawnPiece(this.player);
           }
       }
   }
@@ -331,7 +329,7 @@ class Piece {
 
 
               //check if the block is free near the piece, return true if there is collision
-              if(game.boardPosition[this.x + xx + xChange][this.y + yy + yChange] === 0){
+              if(this.player.boardPosition[this.x + xx + xChange][this.y + yy + yChange] === 0){
 
                   test++;
 
@@ -349,5 +347,6 @@ class Piece {
 
       return false;
   }
+
 }
 module.exports = Piece;

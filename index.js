@@ -40,7 +40,7 @@ io.on('connection', function(socket){
   // start Game
   game.start( game.players[socket.id] );
   io.emit('newPlayer', {
-    boardPosition: game.players[socket.id].boarsPosition,
+    boardPosition: game.players[socket.id].boardPosition,
     id: socket.id
   });
 
@@ -56,31 +56,40 @@ io.on('connection', function(socket){
   socket.on("keydown", function(move) {
     if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
       // if an acceptable move (to prevent client hacking etc)
-      console.log("keydown:" + move); //debugging
+      // console.log("keydown:" + move); //debugging
 
       var player = game.getPlayer(socket.id);
 
       switch (move) {
         case "moveLeft":
-          game.moveLeft(player);
+          if(player.isPressed("moveLeft"))
+            game.moveLeft(player);
           break;
         case "rotateRight":
-          game.rotateRight(player);
+          if(player.isPressed("rotateRight"))
+            game.rotateRight(player);
           break;
         case "moveRight":
-          game.moveRight(player);
+          if(player.isPressed("moveRight"))
+            game.moveRight(player);
           break;
         case "softDrop":
-          game.softDrop(player);
+          if(player.isPressed("softDrop"))
+            game.softDrop(player);
           break;
         case "rotateLeft":
-          game.rotateLeft(player);
+          if(player.isPressed("rotateLeft"))
+            game.rotateLeft(player);
           break;
         case "hardDrop":
-          game.hardDrop(player);
+          if(player.isPressed("hardDrop"))
+            game.hardDrop(player);
           break;
         case "hold":
-          game.hold(player);
+          if(player.isPressed("hold")) {
+              player.tspinRotate = false; //not tspin if new piece comes
+              game.hold(player);
+          }
           break;
       }
       game.players[socket.id].pressed[move] = (new Date).getTime();
@@ -89,7 +98,7 @@ io.on('connection', function(socket){
   socket.on("keyup", function(move) {
     if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
       // if an acceptable move (to prevent client hacking etc)
-      console.log("keyup:" + move); //debugging
+      // console.log("keyup:" + move); //debugging
 
       var player = game.getPlayer(socket.id);
 
