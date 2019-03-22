@@ -14,8 +14,11 @@ app.get('/boobs', function(req, res){
   res.send('<h1>Hello world</h1>');
 });
 
-http.listen(3000, function(){
-  console.log('listening on *:3000');
+require('dotenv').config()
+var port = process.env.PORT || '3000';
+
+http.listen(port, function(){
+  console.log('listening on *:' + port);
 });
 
 // socket client/server communication starts here
