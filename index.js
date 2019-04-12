@@ -5,8 +5,8 @@ var io = require('socket.io')(http);
 var path = require('path');
 
 //include game classes
-var Game = require('./newscripts/game/');
-var Player = require('./newscripts/player/');
+var Game = require('./src/server/game/');
+var Player = require('./src/server/player/');
 
 app.use(express.static(path.join(__dirname,'public'))); //this code allows us to access anything in the public folder
 
@@ -36,12 +36,7 @@ global.game = new Game(io);
 // when user connects (basically opens the client)
 io.on('connection', function(socket){
   game.players[socket.id] = new Player(socket.id);
-
-  // debug
-  // console.log(game.players);
-
-  // start Game
-  game.start( game.players[socket.id] );
+  console.log(game.players)
 
   socket.broadcast.emit('newPlayer', [socket.id]); //send to everyone else that a new player has joined
 
@@ -61,78 +56,28 @@ io.on('connection', function(socket){
   socket.on('disconnect', function(){
     // when user disconnects
     useramount--;
-    game.clean(game.getPlayer(socket.id));
     delete game.players[socket.id]; //remove from game.players
     console.log('user disconnected: ' + useramount);
     io.emit("deletePlayer", socket.id); //tell everyone to remove this player
   });
-  socket.on("keydown", function(move) {
-    if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
-      // if an acceptable move (to prevent client hacking etc)
-      // console.log("keydown:" + move); //debugging
 
-      var player = game.getPlayer(socket.id);
 
-      switch (move) {
-        case "moveLeft":
-          if(player.isPressed("moveLeft"))
-            game.moveLeft(player);
-          break;
-        case "rotateRight":
-          if(player.isPressed("rotateRight"))
-            game.rotateRight(player);
-          break;
-        case "moveRight":
-          if(player.isPressed("moveRight"))
-            game.moveRight(player);
-          break;
-        case "softDrop":
-          if(player.isPressed("softDrop"))
-            game.softDrop(player);
-          break;
-        case "rotateLeft":
-          if(player.isPressed("rotateLeft"))
-            game.rotateLeft(player);
-          break;
-        case "hardDrop":
-          if(player.isPressed("hardDrop"))
-            game.hardDrop(player);
-          break;
-        case "hold":
-          if(player.isPressed("hold")) {
-              player.tspinRotate = false; //not tspin if new piece comes
-              game.hold(player);
-          }
-          break;
-      }
-      game.players[socket.id].pressed[move] = (new Date).getTime();
-    }
+  socket.on('update', function(data) {
+    socket.broadcast.emit('updatePlayer', data);
   });
-  socket.on("keyup", function(move) {
-    if(["moveLeft", "rotateRight", "moveRight", "softDrop", "rotateLeft", "rotateRightMac", "hardDrop", "hold"].includes(move)) {
-      // if an acceptable move (to prevent client hacking etc)
-      // console.log("keyup:" + move); //debugging
 
-      var player = game.getPlayer(socket.id);
+  socket.on('linesSent', function(data) {
+    var player;
 
-      switch (move) {
-        case "moveLeft":
-          break;
-        case "rotateRight":
-          break;
-        case "moveRight":
-          break;
-        case "softDrop":
-          break;
-        case "rotateLeft":
-          break;
-        case "hardDrop":
-          break;
-        case "hold":
-          break;
-      }
-      delete game.players[socket.id].pressed[move];
-    }
-  });
+    do {
+      player = game.getRandomPlayer();
+    } while(player.id == socket.id && useramount > 1)
+
+    socket.broadcast.to(player.id).emit('recieveLines', data);
+  })
+
+  socket.on('message', function(data) {
+    socket.broadcast.emit('message', data);
+  })
 
 });

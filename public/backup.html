@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <canvas id="holdCanvas" width="98" height="98" style="float: left; margin-right: 10px;"></canvas>
+    <canvas id="boardCanvas" width="240" height="528" style="float: left; margin-right: 10px;"></canvas>
+    <canvas id="playerIncomingCanvas" width="4" height="482" style="float: left;"></canvas>
+    <canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
+
+    <div id="line"></div>
+
+    <div id="otherPlayerCanvas"></div>
+
+    <script src="/js/client.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      var socket = io();
+      var id;
+
+      socket.on('connect', function() {
+        id = socket.id;
+      });
+
+      socket.on('update', function(data){
+        if(data.id == id) {
+          //detect if the data is the current player, then draw on the main board
+          draw.clearCanvas(draw.boardCanvas);
+          draw.drawGrid(draw.boardCanvas, 24);
+
+          //ghost piece
+          var myRotations = data.piece.rotation.split('|');
+          draw.clearCanvas(draw.boardCanvas);
+          for(var i = 0; i <= 3; i++) {
+              var xx, yy, coordinates;
+
+              coordinates = myRotations[i].split(',');
+              xx = Number(coordinates[0]); //x pos of the block
+              yy = Number(coordinates[1]); //y pos of the block
+
+              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas, 24);
+          }
+
+
+          //draw pieces
+          myRotations = data.piece.rotation.split('|');
+          for(var i = 0; i <= 3; i++) {
+              var xx, yy, coordinates;
+
+              coordinates = myRotations[i].split(',');
+              xx = Number(coordinates[0]); //x pos of the block
+              yy = Number(coordinates[1]); //y pos of the block
+
+              color = draw.getPieceColor(data.piece.color);
+
+              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas, 24);
+          }
+
+          draw.drawBoard(draw.boardCanvas, data.boardPosition, 24);
+
+          draw.drawHold(data.hold);
+          draw.drawQueue(data.queue);
+          draw.drawIncoming(data.incoming)
+        } else {
+          //if this update is from another player, draw them on a smaller board
+          var otherCanvas = draw.otherPlayerCanvas[data.id];
+
+          draw.clearCanvas(otherCanvas);
+          draw.drawGrid(otherCanvas, 10);
+
+          draw.drawBoard(otherCanvas, data.boardPosition, 10);
+        }
+      });
+      socket.on('sendLines', function(data){
+        document.getElementById("line").innerHTML = data.message;
+      })
+
+      socket.on('newPlayer', function(ids){
+        console.log(ids)
+        for(var id of ids)
+          newPlayer(id); //when a new player has joined, run this function to save their id
+      });
+      var playerIds = [];
+      function newPlayer(id) {
+        playerIds.push(id);
+        $('#otherPlayerCanvas').append(`<canvas id="${id}"></canvas>`)
+        draw.otherPlayerCanvas[id] = document.getElementById(id);
+      }
+
+      socket.on('deletePlayer', function(id) {
+        console.log("delete", id)
+        delete draw.otherPlayerCanvas[id];
+        $('#' + id).remove();
+      });
+
+    </script>
+  </body>
+</html>

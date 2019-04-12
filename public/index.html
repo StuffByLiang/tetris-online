@@ -25,67 +25,81 @@
 
       socket.on('connect', function() {
         id = socket.id;
+        game.player.id= id;
       });
 
-      socket.on('update', function(data){
-        if(data.id == id) {
-          //detect if the data is the current player, then draw on the main board
-          draw.clearCanvas(draw.boardCanvas);
-          draw.drawGrid(draw.boardCanvas, 24);
-
-          //ghost piece
-          var myRotations = data.piece.rotation.split('|');
-          draw.clearCanvas(draw.boardCanvas);
-          for(var i = 0; i <= 3; i++) {
-              var xx, yy, coordinates;
-
-              coordinates = myRotations[i].split(',');
-              xx = Number(coordinates[0]); //x pos of the block
-              yy = Number(coordinates[1]); //y pos of the block
-
-              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas, 24);
-          }
-
-
-          //draw pieces
-          myRotations = data.piece.rotation.split('|');
-          for(var i = 0; i <= 3; i++) {
-              var xx, yy, coordinates;
-
-              coordinates = myRotations[i].split(',');
-              xx = Number(coordinates[0]); //x pos of the block
-              yy = Number(coordinates[1]); //y pos of the block
-
-              color = draw.getPieceColor(data.piece.color);
-
-              draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas, 24);
-          }
-
-          draw.drawBoard(draw.boardCanvas, data.boardPosition, 24);
-
-          draw.drawHold(data.hold);
-          draw.drawQueue(data.queue);
-          draw.drawIncoming(data.incoming)
-        } else {
-          //if this update is from another player, draw them on a smaller board
-          var otherCanvas = draw.otherPlayerCanvas[data.id];
-
-          draw.clearCanvas(otherCanvas);
-          draw.drawGrid(otherCanvas, 10);
-
-          draw.drawBoard(otherCanvas, data.boardPosition, 10);
-        }
-      });
-      socket.on('sendLines', function(data){
-        document.getElementById("line").innerHTML = data.message;
+      // socket.on('update', function(data){
+      //   if(data.id == id) {
+      //     //detect if the data is the current player, then draw on the main board
+      //     draw.clearCanvas(draw.boardCanvas);
+      //     draw.drawGrid(draw.boardCanvas, 24);
+      //
+      //     //ghost piece
+      //     var myRotations = data.piece.rotation.split('|');
+      //     draw.clearCanvas(draw.boardCanvas);
+      //     for(var i = 0; i <= 3; i++) {
+      //         var xx, yy, coordinates;
+      //
+      //         coordinates = myRotations[i].split(',');
+      //         xx = Number(coordinates[0]); //x pos of the block
+      //         yy = Number(coordinates[1]); //y pos of the block
+      //
+      //         draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas, 24);
+      //     }
+      //
+      //
+      //     //draw pieces
+      //     myRotations = data.piece.rotation.split('|');
+      //     for(var i = 0; i <= 3; i++) {
+      //         var xx, yy, coordinates;
+      //
+      //         coordinates = myRotations[i].split(',');
+      //         xx = Number(coordinates[0]); //x pos of the block
+      //         yy = Number(coordinates[1]); //y pos of the block
+      //
+      //         color = draw.getPieceColor(data.piece.color);
+      //
+      //         draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas, 24);
+      //     }
+      //
+      //     draw.drawBoard(draw.boardCanvas, data.boardPosition, 24);
+      //
+      //     draw.drawHold(data.hold);
+      //     draw.drawQueue(data.queue);
+      //     draw.drawIncoming(data.incoming)
+      //   } else {
+      //     //if this update is from another player, draw them on a smaller board
+      //     var otherCanvas = draw.otherPlayerCanvas[data.id];
+      //
+      //     draw.clearCanvas(otherCanvas);
+      //     draw.drawGrid(otherCanvas, 10);
+      //
+      //     draw.drawBoard(otherCanvas, data.boardPosition, 10);
+      //   }
+      // });
+      socket.on('recieveLines', function(lines){
+        game.player.addToIncoming(lines);
+        console.log(lines);
       })
 
+      socket.on('updatePlayer', function(data){
+        // console.log(data)
+        var otherCanvas = draw.otherPlayerCanvas[data.id];
+
+        draw.clearCanvas(otherCanvas);
+        draw.drawGrid(otherCanvas, 10);
+
+        draw.drawBoard(otherCanvas, data.boardPosition, 10);
+      })
+      //
       socket.on('newPlayer', function(ids){
         console.log(ids)
         for(var id of ids)
           newPlayer(id); //when a new player has joined, run this function to save their id
       });
+
       var playerIds = [];
+
       function newPlayer(id) {
         playerIds.push(id);
         $('#otherPlayerCanvas').append(`<canvas id="${id}"></canvas>`)
@@ -97,6 +111,16 @@
         delete draw.otherPlayerCanvas[id];
         $('#' + id).remove();
       });
+
+      function message(message) {
+        socket.emit('message', message);
+      }
+
+      socket.on('message', function(data) {
+        console.log(data);
+      })
+
+      game.start()
 
     </script>
   </body>
