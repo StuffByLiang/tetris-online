@@ -35,6 +35,8 @@ class Game {
         increaseGravity: false,
         randomColor: false,
         disableGhost: false,
+        cheeseGarbage: false,
+        oneGarbage: false,
         level: 1
       };
 
@@ -943,14 +945,23 @@ class Game {
         if(this.modifiers.cheeseGarbage) random = this.random(0, 9); //if cheeseGarbage modifier is true, set random each line
         if(settings.myNameIsMeidy) random = settings.random;
 
-        //set entire bottom row to be full
-      	for(var x = 0; x<= 9; x++){
-            player.boardPosition[x][21-y] = 8;
+        if(!this.modifiers.oneGarbage){
+          //this is normal one
+           for(var x = 0; x<= 9; x++){
+            player.boardPosition[x][21-y] = 8; //sets it to be full
           }
-        //on the bottom row, remove a random block
-        player.boardPosition[random][21-y] = 0;
+          //on the bottom row, remove a random block
+          player.boardPosition[random][21-y] = 0;
+        }
+        
+        else {
+          for(var x = 0; x<= 9; x++){
+            player.boardPosition[x][21-y] = 0; //sets it to be empty
+          }
+          //on the bottom row, add a random block
+          player.boardPosition[random][21-y] = 8;
+        }
       }
-
       player.piece.update();
   }
   applyGarbage() {
@@ -998,6 +1009,15 @@ class Game {
       switch(random) {
         case 1:
           this.modifiers.cheeseGarbage = true;
+          break;
+      }
+    }
+    
+    if(this.modifiers.level == 4) {
+      random = this.random(1, 1);
+      switch(random) {
+        case 1:
+          this.modifiers.oneGarbage = true;
           break;
       }
     }
