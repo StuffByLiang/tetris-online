@@ -19,6 +19,10 @@ class Player {
     this.linesSentRecord = "";
     this.boardPositionRecord = "";
 
+    this.stats = {
+      b2bTSD: 0
+    }
+
     //sets up boardPosition
     for(var x = -1; x <= 10; x++) {// every row
       this.boardPosition[x] = [];
@@ -34,7 +38,7 @@ class Player {
   }
   isPressed(move) {
     // returns if the key correlated to the move is currently being pressed
-    return this.pressed[move] === undefined ? true : false;
+    return this.pressed[move] === undefined ? false: true;
   }
   addToIncoming(lines) {
       this.incoming.push(lines);

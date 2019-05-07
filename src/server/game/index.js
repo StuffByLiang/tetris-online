@@ -3,6 +3,7 @@ class Game {
     this.io = io;
     this.players = [];
     this.bag = [];
+    this.started=false;
 
     //this.send = new Send();
   }
@@ -15,6 +16,16 @@ class Game {
       var player = this.getPlayer(playerId);
       callback(player);
     }
+  }
+  getTotalAlive() {
+    var aliveCount=0;
+    this.iterate(player => {
+      if(player.alive) {
+        aliveCount++;
+      }
+    })
+
+    return aliveCount;
   }
   getRandomPlayer() {
     var keys = Object.keys(this.players);
@@ -46,6 +57,11 @@ class Game {
     }
 
     return array;
+  }
+  reset() {
+    this.players = [];
+    this.started = false;
+    this.io.emit("gameInfo", false);
   }
 }
 module.exports = Game;

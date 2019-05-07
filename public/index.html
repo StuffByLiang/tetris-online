@@ -4,29 +4,147 @@
     <title>Socket.IO chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      #buttons-container {
+        clear: both;
+        margin-left: 110px;
+        padding-top: 7px;
+      }
+
+      .note {
+        position: absolute;
+        z-index: 3;
+        width: 100%;
+        text-align: center;
+        opacity: 0.85;
+        background-color: #1c1c1c;
+      }
+
+      #note {
+        width: 242px;
+        opacity: 0.91;
+        top: 168px;
+        height: 97px;
+        color: rgb(203, 214, 0);
+        font-weight: bold;
+        display: block;
+      }
+
+      #settings-container {
+        position: absolute;
+        z-index: 15;
+        width: 470px;
+        height: 470px;
+        background-color: grey;
+        border-color: black;
+        top: 90px;
+        left: 50px;
+        text-align: left;
+        padding: 5px 15px;
+      }
+
+      #tabs-menu li {
+        display: inline;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      #tabs-menu li a {
+        padding: 3px 6px;
+        color: #121212;
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+        background-color: #a1a1a1;
+        border: 1px solid #f3f3f3;
+      }
+
+      div.setTab {
+        padding: 5px 15px 15px;
+        border: 1px solid #E0E0E0;
+        height: 370px;
+        margin-top: 3px;
+        overflow: auto;
+      }
     </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
   </head>
   <body>
     <canvas id="holdCanvas" width="98" height="98" style="float: left; margin-right: 10px;"></canvas>
-    <canvas id="boardCanvas" width="240" height="528" style="float: left; margin-right: 10px;"></canvas>
+    <div style="float: left; margin-right: 10px;">
+      <canvas id="boardCanvas" width="240" height="528"></canvas>
+      <div class="note" id="note"><div id="place" style="font-size: 32px; margin-top: 11px; color: rgb(0, 191, 255);">Place</div><div style="font-size: 16px; margin-top: 7px; color: white;">Wait until the round ends</div></div>
+    </div>
     <canvas id="playerIncomingCanvas" width="4" height="482" style="float: left;"></canvas>
     <canvas id="queueCanvas" width="98" height="362" style="float: left;"></canvas>
 
     <div id="line"></div>
-
     <div id="otherPlayerCanvas"></div>
+    <div id="buttons-container">
+      <button id="bSettings" onclick="toggleSettings()">Settings</button>
+      <button id="bStartGame" onclick="start()">Join Game</button>
+    </div>
+
+    <div id="settings-container">
+        <div class="settings-tabs">
+            <ul id="tabs-menu">
+                <li><a href="javascript:void(0)" data-target="tab_controls" class="">Controls</a></li>
+                <li><a href="javascript:void(0)" data-target="tab_settings" class="">Game settings</a></li>
+            </ul>
+
+            <!-- <div class="setTab" id="tab_controls" style="display: none;">
+                <h2>Game controls</h2>
+                <em>Click on a text box and press the key you want.</em>
+                <table>
+                    <tbody><tr><td width="180">Move Left:</td><td width="125"><input id="input1" type="text" size="7" value=""></td><td id="kc1">0</td></tr>
+                    <tr><td>Move Right:</td><td><input id="input2" type="text" size="7" value=""></td><td id="kc2">0</td></tr>
+                    <tr><td>Soft Drop:</td><td><input id="input3" type="text" size="7" value=""></td><td id="kc3">0</td></tr>
+                    <tr><td>Hard Drop:</td><td><input id="input4" type="text" size="7" value=""></td><td id="kc4">0</td></tr>
+                    <tr><td>Rotate Left:</td><td><input id="input5" type="text" size="7" value=""></td><td id="kc5">0</td></tr>
+                    <tr><td>Rotate Right:</td><td><input id="input6" type="text" size="7" value=""></td><td id="kc6">0</td></tr>
+                    <tr><td>Rotate 180:</td><td><input id="input8" type="text" size="7" value=""></td><td id="kc8">0</td></tr>
+                    <tr><td>Hold:</td><td><input id="input7" type="text" size="7" value=""></td><td id="kc7">0</td></tr>
+                </tbody></table>
+
+                <table>
+                    <tbody><tr><td><input type="checkbox" id="touch"></td><td><label for="touch">Enable touch screen controls (experimental)</label></td></tr>
+                </tbody></table>
+
+            </div> -->
+
+            <div class="setTab" id="settings-tab">
+                <h2>Game settings</h2>
+                <div id="game_settings">
+                  DAS: <input size="10" id="DAS" type="text" value="133"><br>
+                  ARR: <input size="10" id="DAS" type="text" value="10"><br>
+                  Gravity: <input size="10" id="DAS" type="text" value="1000"><br>
+                  softDrop: <input size="10" id="DAS" type="text" value="10"><br>
+                </div>
+            </div>
+        </div>
+
+        <button id="saveSettings" onclick="saveSettings()">Save Settings &amp; Close</button>
+        <button id="resetSettings">Reset Settings</button>
+    </div>
 
     <script src="/js/client.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       var socket = io();
-      var id;
+      var id, env;
 
       socket.on('connect', function() {
         id = socket.id;
-        game.player.id= id;
+        game.id= id;
       });
+
+      socket.on('env', function(data) {
+        env = data;
+        console.log(env);
+      })
 
       // socket.on('update', function(data){
       //   if(data.id == id) {
@@ -102,7 +220,7 @@
 
       function newPlayer(id) {
         playerIds.push(id);
-        $('#otherPlayerCanvas').append(`<canvas id="${id}"></canvas>`)
+        $('#otherPlayerCanvas').append(`<div style="float:left"><canvas id="${id}"></canvas><div id="${id}-info"></div></div>`)
         draw.otherPlayerCanvas[id] = document.getElementById(id);
       }
 
@@ -120,7 +238,50 @@
         console.log(data);
       })
 
-      game.start()
+      function start() {
+        socket.emit('start');
+      }
+
+      socket.on('start', function() {
+        $('#bStartGame').attr('disabled','disabled');
+        $('.note').hide();
+        game.start();
+        socket.emit('ready');
+      })
+
+      //recieve from the server if game has been started
+      socket.on('gameInfo', function(started) {
+        if(started) {
+          $('#bStartGame').attr('disabled','disabled');
+        } else {
+          $('#bStartGame').removeAttr('disabled');
+          $('.note').show();
+        }
+      })
+
+      socket.on('place', function(place) {
+        $('#place').html("Place: " + place);
+      })
+
+      $('#settings-container').hide()
+
+      function toggleSettings() {
+        var isOpen = $('#settings-container').is(":visible");
+        if(isOpen) {
+          $('#settings-container').hide();
+        } else {
+          $('#settings-container').show();
+        }
+      }
+
+      function savingSettings() {
+        $('#settings-container').hide();
+      }
+
+      socket.on('b2bTSD', function(data) {
+        var {id, num} = data;
+        $(`#${id}-info`).html("B2B TSPINS: " + num);
+      })
 
     </script>
   </body>

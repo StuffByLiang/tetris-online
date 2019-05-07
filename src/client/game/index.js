@@ -5,29 +5,61 @@ var Player = require('../player/');
 class Game {
   constructor(io) {
     this.io = io;
-    this.player = new Player();
+    this.player = null;
     this.bag = [];
+    this.id = null;
+    this.randomModiferInterval = null;
+
+    this.modifiers = null;
 
     //this.send = new Send();
   }
   start() {
-    var { player } = this;
+    this.reset();
+    this.player = new Player();
 
-    if(this.checkLoss() || !player.begin) {
+    var {player} = this;
+
+    if(!player.begin) {
       player.begin = true;
-      if(player.piece) {
-        //if game piece exists
-        clearInterval(player.piece.interval);
-        player.piece = null;
+
+      if(settings.myNameIsMeidy) {
+        game.meidy();
+        clearInterval(settings.meidy);
+        settings.meidy = setInterval(function() {
+          game.meidy()
+        }, 20000);
       }
+
+      this.modifiers = {
+        increaseGravity: false,
+        randomColor: false,
+        disableGhost: false,
+        level: 1
+      };
 
       // player = new playerObject();W
       player.startTime = (new Date).getTime(); //set the time in which game starts
 
+      if(env.modifiers) this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
+
       this.spawnPiece();
-      // game.drawQueue();
-      // game.drawHold();
     }
+  }
+  reset() {
+    if(this.player == null) {
+      return;
+    }
+
+    $('#otherPlayerCanvas').html("");
+
+    var {player} = this;
+
+    this.bag = []
+    //if game piece exists
+    clearInterval(player.piece.interval);
+    player.piece = null;
+
   }
   checkLoss() {
     var { player } = this;
@@ -41,6 +73,13 @@ class Game {
     }
 
     return check;
+  }
+  loss() {
+    console.log("YOU FUCKING LOST");
+    socket.emit('died');
+    game.losingGray();
+    this.player.begin=false;
+    $('.note').show();
   }
   moveLeft() {
     var { player } = this;
@@ -137,7 +176,7 @@ class Game {
     //check if no collision down
     if(!player.piece.checkCollision(1)){
         clearInterval(player.piece.interval);
-        player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
+        player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.softDrop);
 
         player.piece.y++;
 
@@ -199,6 +238,9 @@ class Game {
     }
   }
   hardDrop() {
+    if(this.checkLoss()) {
+      return;
+    }
     var { player } = this;
 
     //check if no collision left
@@ -210,6 +252,10 @@ class Game {
     player.piece.die();
   }
   spawnPiece(hold) {
+      if(this.checkLoss()) {
+        return;
+      }
+
       var { player } = this;
 
       //spawn a piece
@@ -237,6 +283,8 @@ class Game {
       rotations = this.getPieceRotation(player.currentPieceName);
       color = this.getPieceNumber(player.currentPieceName);
 
+      if(this.modifiers.randomColor) color = this.random(1,7);
+
       player.piece = new Piece(player, 3, -1, player.currentPieceName, color, rotations); //create piece
 
       //set gravity if down is pressed
@@ -244,7 +292,7 @@ class Game {
           //check if no collision down and if so, set soft drop
           if(!player.piece.checkCollision(1)){
               clearInterval(player.piece.interval);
-              player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
+              player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.softDrop);
           }
       }
 
@@ -415,7 +463,9 @@ class Game {
       return "not";
   }
   linesSent(cleared, tspin) {
-    var { player } = this;
+    var { player } = this
+
+    var b2bTSD = false;
 
       var message = "";
       var linesSent = 0;
@@ -471,31 +521,32 @@ class Game {
 
           //calculate back to backs
           if(player.b2b == true && cleared == 4){
-              linesSent += 6;
+              linesSent += 5;
               message += "Back to back TETRIS!!!<BR>";
           }else if(player.b2b == true && tspin != "not"){
-             switch(tspin){
-              case "mini":
-                      linesSent += 2;
-                      message += "Back to back T-spin mini!!!<BR>";
-                  break;
-              case "tspin":
-                  switch(cleared){
-                      case 1:
-                          linesSent += 3;
-                          message += "Back to back T-spin single!!!<BR>";
-                          break;
-                      case 2:
-                          linesSent += 6;
-                          message += "Back to back T-spin double!!!<BR>";
-                          break;
-                      case 3:
-                          linesSent += 9;
-                          message += "Back to back T-spin triple!!!<BR>";
-                          break;
-                  }
-                  break;
+            if(tspin == "mini" && cleared < 2) {
+              linesSent += 1;
+              message += "Back to back T-spin mini!!!<BR>";
+            } else if(tspin == "tspin" || tspin == "mini") {
+              switch(cleared){
+                  case 1:
+                      linesSent += 3;
+                      message += "Back to back T-spin single!!!<BR>";
+                      break;
+                  case 2:
+                      linesSent += 5;
+                      message += "Back to back T-spin double!!!<BR>";
+                      if(env.b2bTSD) {
+                        b2bTSD = true;
+                      }
+
+                      break;
+                  case 3:
+                      linesSent += 7;
+                      message += "Back to back T-spin triple!!!<BR>";
+                      break;
               }
+            }
           }else{
 
               //send lines depending on lines cleared
@@ -522,36 +573,55 @@ class Game {
               }
 
               //send lines depending on tspin
-              switch(tspin){
-                  case "mini":
-                      if(cleared > 0){
-                          linesSent += 1;
-                          player.b2b = true;
-                      }
-                      message += "T-spin mini<BR>";
-                      break;
-                  case "tspin":
-                      switch(cleared){
-                          case 1:
-                              linesSent += 2;
-                              message += "T-spin single!<BR>";
-                              break;
-                          case 2:
-                              linesSent += 3;
-                              message += "T-spin double!!!<BR>";
-                              break;
-                          case 3:
-                              linesSent += 4;
-                              message += "T-spin triple!!!!!<BR>";
-                              break;
-                      }
-                      player.b2b = true;
-                      break;
+              if(tspin == "mini" && cleared < 2) {
+                if(cleared > 0){
+                    linesSent += 0;
+                    player.b2b = true;
+                }
+                message += "T-spin mini<BR>";
+              } else if(tspin =="tspin" || tspin == "mini") {
+                switch(cleared){
+                    case 1:
+                        linesSent += 2;
+                        message += "T-spin single!<BR>";
+                        break;
+                    case 2:
+                        linesSent += 3;
+                        message += "T-spin double!!!<BR>";
+                        if(env.b2bTSD) b2bTSD = true;
+                        break;
+                    case 3:
+                        linesSent += 4;
+                        message += "T-spin triple!!!!!<BR>";
+                        break;
+                }
+                player.b2b = true;
               }
           }
       }
 
+      if(linesSent > 1 && settings.handicap) {
+        linesSent = 1;
+      }
+      if(linesSent >= 1 && settings.myNameIsMeidy) {
+        linesSent *= 4;
+        if(linesSent > 10) linesSent = 10;
+      }
+
       player.linesSent += linesSent;
+
+      if(env.b2bTSD) {
+        linesSent = 0;
+        if(cleared>0 && !b2bTSD) {
+          this.loss();
+          return;
+        } else if(b2bTSD) {
+          player.stats.b2bTSD++;
+          socket.emit('b2bTSD', player.stats.b2bTSD);
+          linesSent = 3;
+        }
+        message += "Total Back to Back Tspin Doubles: " + player.stats.b2bTSD + "<br>";
+      }
 
       if(cleared > 0){
           game.recordLinesSent(linesSent); //record lines sent
@@ -599,17 +669,6 @@ class Game {
     // when need to delete, we need to clear all intervals
     clearInterval(player.piece.interval);
   }
-  //garbage
-  applyGarbage() {
-      var { player } = this;
-      for(var lines of player.incoming) {
-        game.addGarbage(lines);
-      }
-
-      player.incoming = [];
-      // game.draw(player);
-  }
-
   // bag
   newBag() {
     var bagLength = this.bag.length;
@@ -636,7 +695,6 @@ class Game {
 
     return array;
   }
-
   //other functions
   getPieceNumber(pieceName) {
     switch(pieceName) {
@@ -718,6 +776,11 @@ class Game {
       return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
   }
   getPieceColor(piece) {
+
+    if(this.modifiers.randomColor) {
+      piece = 8;
+    }
+
     switch(piece){
         case 1:
             return "#69BE28";
@@ -737,7 +800,6 @@ class Game {
             return "#696969";
     }
   }
-
   //draw
   draw() {
     // console.log(player);
@@ -763,7 +825,7 @@ class Game {
     }
 
     var data = {
-      id: player.id,
+      id: this.id,
       ghost: {
         y: player.piece.ghost.y,
         color: player.piece.ghost.color
@@ -787,6 +849,8 @@ class Game {
     //ghost piece
     var myRotations = data.piece.rotation.split('|');
     draw.clearCanvas(draw.boardCanvas);
+
+    if(!this.modifiers.disableGhost)
     for(var i = 0; i <= 3; i++) {
         var xx, yy, coordinates;
 
@@ -818,7 +882,6 @@ class Game {
     draw.drawQueue(data.queue);
     draw.drawIncoming(data.incoming)
   }
-
   //record
   recordBoardPosition() {
     var { player } = this;
@@ -862,12 +925,11 @@ class Game {
 
       player.linesSentRecord += tempstring;
   }
-
   //garbage
   addGarbage(linesSent) {
     var { player } = this;
 
-      var random = Math.floor(Math.random() * 10)  // get random number from 0-9
+      var random = this.random(0,9);  // get random number from 0-9
       //move every row up
 
       for(var y = 0; y <= 20; y++) {
@@ -878,9 +940,14 @@ class Game {
       }
 
       for(var y = 0; y< linesSent; y++){
+        if(this.modifiers.cheeseGarbage) random = this.random(0, 9); //if cheeseGarbage modifier is true, set random each line
+        if(settings.myNameIsMeidy) random = settings.random;
+
+        //set entire bottom row to be full
       	for(var x = 0; x<= 9; x++){
             player.boardPosition[x][21-y] = 8;
           }
+        //on the bottom row, remove a random block
         player.boardPosition[random][21-y] = 0;
       }
 
@@ -899,7 +966,52 @@ class Game {
 
     player.incoming = [];
   }
+  applyRandomModifier() {
+    console.log('Applied Random Modifer');
 
+    var random;
+
+    if(this.modifiers.level == 1) {
+      random = this.random(1, 4);
+      switch(random) {
+        case 1:
+          //change gravity to be faster
+          settings.gravity = 100;
+          this.modifiers.increaseGravity = true;
+          break;
+        case 2:
+          //get random colors for each pieces
+          this.modifiers.randomColor = true;
+          break;
+        case 3:
+          //disable ghost piece
+          this.modifiers.disableGhost = true;
+          break;
+        case 4:
+          this.modifiers.cheeseGarbage = true;
+          break;
+      }
+    }
+
+    if(this.modifiers.level == 2) {
+      random = this.random(1, 1);
+      switch(random) {
+        case 1:
+          this.modifiers.cheeseGarbage = true;
+          break;
+      }
+    }
+
+    // this.modifiers.level++;
+  }
+  random(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  meidy() {
+    settings.random = game.random(0, 9);
+  }
 }
 window.game = new Game();
 // module.exports = Game;

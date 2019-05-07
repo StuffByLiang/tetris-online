@@ -10,10 +10,6 @@ var Player = require('./src/server/player/');
 
 app.use(express.static(path.join(__dirname,'public'))); //this code allows us to access anything in the public folder
 
-app.get('/boobs', function(req, res){
-  res.send('<h1>Hello world</h1>');
-});
-
 require('dotenv').config()
 var port = process.env.PORT || '3000';
 
@@ -35,11 +31,6 @@ global.game = new Game(io);
 
 // when user connects (basically opens the client)
 io.on('connection', function(socket){
-  game.players[socket.id] = new Player(socket.id);
-  console.log(game.players)
-
-  socket.broadcast.emit('newPlayer', [socket.id]); //send to everyone else that a new player has joined
-
   var connectedPlayers = [];
   for(var id in game.players) {
     if(id != socket.id) {
@@ -48,17 +39,40 @@ io.on('connection', function(socket){
     }
   }
   socket.emit('newPlayer', connectedPlayers) //send to the client that just joined a list of all connected players
+  //tell the client whether a current game has started
+  socket.emit('gameInfo', game.started);
+  socket.emit('env', {
+    port: process.env.PORT,
+    b2bTSD: process.env.b2bTSD == "true" ? true : false,
+    modifiers: process.env.modifiers == "true" ? true : false,
+  });
 
-  // everything here will be custom events
-  useramount++;
-  console.log('a user connected: ' + useramount);
+  socket.on('start', () => {
+    game.started = true;
+    io.emit('start');
+  })
+
+  socket.on('ready', () => {
+    game.players[socket.id] = new Player(socket.id);
+    console.log(game.players)
+
+    socket.broadcast.emit('newPlayer', [socket.id]); //send to everyone else that a new player has joined
+
+    // everything here will be custom events
+    useramount++;
+    console.log('a user connected: ' + useramount);
+  });
 
   socket.on('disconnect', function(){
-    // when user disconnects
-    useramount--;
-    delete game.players[socket.id]; //remove from game.players
-    console.log('user disconnected: ' + useramount);
-    io.emit("deletePlayer", socket.id); //tell everyone to remove this player
+    // when user disconnects and is in the game
+    if(game.players[socket.id]) {
+      useramount--;
+      delete game.players[socket.id]; //remove from game.players
+      console.log('user disconnected: ' + useramount);
+      io.emit("deletePlayer", socket.id); //tell everyone to remove this player
+
+      checkGameRestartable();
+    }
   });
 
 
@@ -67,11 +81,12 @@ io.on('connection', function(socket){
   });
 
   socket.on('linesSent', function(data) {
+    if(!game.started) return;
     var player;
 
     do {
       player = game.getRandomPlayer();
-    } while(player.id == socket.id && useramount > 1)
+    } while(player.id == socket.id && useramount > 1 && player.alive)
 
     socket.broadcast.to(player.id).emit('recieveLines', data);
   })
@@ -80,4 +95,46 @@ io.on('connection', function(socket){
     socket.broadcast.emit('message', data);
   })
 
+  socket.on('died', () => {
+    if(!game.started) return;
+    console.log(game.getTotalAlive())
+    socket.emit('place', game.getTotalAlive());
+
+    game.players[socket.id].alive = false;
+
+    //if one person remaining, send to the last guy that he is in first place
+    if(game.getTotalAlive() == 1) {
+        var winnerId;
+        game.iterate(player=> {
+          if(player.alive) {
+            winnerId = player.id;
+          }
+        })
+        socket.broadcast.to(winnerId).emit('place', 1);
+    }
+
+    checkGameRestartable();
+  })
+  socket.on('b2bTSD', (num) => {
+    socket.broadcast.emit('b2bTSD', {
+      num: num,
+      id: socket.id
+    }); // tell everyone else the num of b2b TSD they have
+  })
+
 });
+
+function checkGameRestartable() {
+  console.log(game.getTotalAlive())
+  // if(process.env.b2bTSD == "true") {
+  //   if(game.getTotalAlive() == 0) {
+  //     game.reset();
+  //     useramount = 0;
+  //   }
+  //   return;
+  // }
+  if(game.getTotalAlive() <= 1) {
+    game.reset();
+    useramount = 0;
+  }
+}

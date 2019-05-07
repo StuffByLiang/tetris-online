@@ -14,6 +14,14 @@ window.key = {
   rotateHalf2: 65,
 
   onKeyDown: function(event) {
+      // switch(event.keyCode) {
+      //   case 32:
+      //   case 37:
+      //   case 38:
+      //   case 39:
+      //   case 40:
+      //     e.preventDefault();
+      // }
       window.dokeydown(event.keyCode);
   },
 
@@ -60,35 +68,35 @@ window.dokeydown = function (e) {
   }
   switch (move) {
     case "moveLeft":
-      if(player.isPressed("moveLeft"))
+      if(!player.isPressed("moveLeft"))
         game.moveLeft(player);
       break;
     case "rotateRight":
-      if(player.isPressed("rotateRight"))
+      if(!player.isPressed("rotateRight"))
         game.rotateRight(player);
       break;
     case "moveRight":
-      if(player.isPressed("moveRight"))
+      if(!player.isPressed("moveRight"))
         game.moveRight(player);
       break;
     case "softDrop":
-      if(player.isPressed("softDrop"))
+      if(!player.isPressed("softDrop"))
         game.softDrop(player);
       break;
     case "rotateLeft":
-      if(player.isPressed("rotateLeft"))
+      if(!player.isPressed("rotateLeft"))
         game.rotateLeft(player);
       break;
     case "rotateHalf":
-      if(player.isPressed("rotateHalf"))
+      if(!player.isPressed("rotateHalf"))
         game.rotateHalf(player);
       break;
     case "hardDrop":
-      if(player.isPressed("hardDrop"))
+      if(!player.isPressed("hardDrop"))
         game.hardDrop(player);
       break;
     case "hold":
-      if(player.isPressed("hold")) {
+      if(!player.isPressed("hold")) {
           player.tspinRotate = false; //not tspin if new piece comes
           game.hold(player);
       }
@@ -132,6 +140,12 @@ window.dokeyup = function(e) {
       case key.rotateHalf:
       case key.rotateHalf2:
         var move = "rotateHalf";
+  }
+  switch (move) {
+    case "softDrop":
+      //reset gravity to regular gravity speed
+      clearInterval(player.piece.interval)
+      player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
   }
   delete player.pressed[move];
 }

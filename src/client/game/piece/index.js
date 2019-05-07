@@ -16,7 +16,7 @@ class Piece {
       this.lowestLine = 0;
       this.rotationLimit = 0;
 
-      this.interval = setInterval(this.doGravity.bind(this), 1000);
+      this.interval = setInterval(this.doGravity.bind(this), settings.gravity);
       this.lockDownTimer = false;
 
       var color = game.getPieceColor(color);
@@ -28,9 +28,15 @@ class Piece {
       game.draw();
   }
   doGravity() {
+    var {player} = this;
       //check if no collision down
       if(!this.checkCollision(1)){
           this.y++;
+
+          //if settings.gravity is 0 (instadrop) do a while loop here and down button is pressed
+          while(settings.softDrop==0 && !this.checkCollision(1) && player.isPressed('softDrop')) {
+            this.y++;
+          }
 
           //reset lockdown timer and rotation limit if reach a new lowest line
           if(this.y > this.lowestLine){
@@ -99,8 +105,7 @@ class Piece {
           game.recordBoardPosition();
 
           if(game.checkLoss()) {
-            console.log("YOU FUCKING LOST");
-            game.losingGray();
+            game.loss();
           } else {
             game.spawnPiece();
           }
