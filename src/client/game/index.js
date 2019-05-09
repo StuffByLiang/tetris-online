@@ -38,6 +38,7 @@ class Game {
         disableGhost: false,
         cheeseGarbage: false,
         oneGarbage: false,
+        noHardDrop: false,
         level: 1
       };
 
@@ -247,7 +248,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss()) {
+    if(this.checkLoss() & !this.modifiers.noHardDrop()) {
       return;
     }
     var { player } = this;
@@ -1039,6 +1040,15 @@ class Game {
       switch(random) {
         case 1:
           this.modifiers.cheeseGarbage = true;
+          break;
+      }
+    }
+    
+    if(this.modifiers.level == 3) {
+      random = this.random(1, 1);
+      switch(random) {
+        case 1:
+          this.modifiers.noHardDrop = true;
           break;
       }
     }
