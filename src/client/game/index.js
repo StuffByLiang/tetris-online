@@ -248,7 +248,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss() & !this.modifiers.noHardDrop()) {
+    if(this.checkLoss() && !this.modifiers.noHardDrop()) {
       return;
     }
     var { player } = this;
@@ -685,7 +685,7 @@ class Game {
     document.getElementById("line").innerHTML += message;
 
     //write modifiers
-    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage} = this.modifiers;
+    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop} = this.modifiers;
     var modifiers;
 
     if(increaseGravity) modifiers += "Gravity Increased, "
@@ -693,6 +693,8 @@ class Game {
     if(disableGhost) modifiers += "Ghost Disabled, "
     if(cheeseGarbage) modifiers += "Cheese Garbage, "
     if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
+    if(noHardDrop) modifiers += "No Hard Drop, "
+
 
     document.getElementById("line").innerHTML += `<br>`
   }
