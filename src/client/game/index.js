@@ -31,6 +31,7 @@ class Game {
         }, 20000);
       }
 
+      //reset modifierse
       this.modifiers = {
         increaseGravity: false,
         randomColor: false,
@@ -43,7 +44,12 @@ class Game {
       // player = new playerObject();W
       player.startTime = (new Date).getTime(); //set the time in which game starts
 
-      if(env.modifiers) this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
+      //reset modifiers
+      if(env.modifiers) {
+        settings.gravity = 1000;
+        clearInterval(this.randomModifierInterval);
+        this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
+      }
 
       this.spawnPiece();
     }
@@ -64,6 +70,7 @@ class Game {
 
   }
   checkLoss() {
+    //returns true or false if the dude lost or not
     var { player } = this;
     var check = false;
     for(var y = 0; y <= 1; y++){
@@ -645,7 +652,8 @@ class Game {
 
       // this.io.to(player.id).emit("linesSent", data);
 
-      document.getElementById("line").innerHTML = message;
+      this.clearMessage();
+      this.writeMessage(message);
 
       // //actually send lines
       // this.iterate(otherPlayer => {
@@ -670,6 +678,25 @@ class Game {
     var { player } = this;
     // when need to delete, we need to clear all intervals
     clearInterval(player.piece.interval);
+  }
+  //message
+  writeMessage(message) {
+    document.getElementById("line").innerHTML += message;
+
+    //write modifiers
+    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage} = this.modifiers;
+    var modifiers;
+
+    if(increaseGravity) modifiers += "Gravity Increased, "
+    if(randomColor) modifiers += "Random Color, "
+    if(disableGhost) modifiers += "Ghost Disabled, "
+    if(cheeseGarbage) modifiers += "Cheese Garbage, "
+    if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
+
+    document.getElementById("line").innerHTML += `<br>`
+  }
+  clearMessage() {
+    document.getElementById("line").innerHTML = "";
   }
   // bag
   newBag() {
@@ -779,9 +806,9 @@ class Game {
   }
   getPieceColor(piece) {
 
-    if(this.modifiers.randomColor) {
-      piece = 8;
-    }
+    // if(this.modifiers.randomColor) {
+    //   piece = 8; // sets ghost piece to gray
+    // }
 
     switch(piece){
         case 1:
@@ -953,7 +980,7 @@ class Game {
           //on the bottom row, remove a random block
           player.boardPosition[random][21-y] = 0;
         }
-        
+
         else {
           for(var x = 0; x<= 9; x++){
             player.boardPosition[x][21-y] = 0; //sets it to be empty
@@ -983,7 +1010,7 @@ class Game {
     var random;
 
     if(this.modifiers.level == 1) {
-      random = this.random(1, 4);
+      random = this.random(1, 6);
       switch(random) {
         case 1:
           //change gravity to be faster
@@ -1001,6 +1028,9 @@ class Game {
         case 4:
           this.modifiers.cheeseGarbage = true;
           break;
+        case 6:
+          this.modifiers.oneGarbage = true;
+          break;
       }
     }
 
@@ -1012,7 +1042,7 @@ class Game {
           break;
       }
     }
-    
+
     if(this.modifiers.level == 4) {
       random = this.random(1, 1);
       switch(random) {
