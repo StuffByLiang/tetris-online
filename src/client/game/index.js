@@ -248,7 +248,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss() && !this.modifiers.noHardDrop()) {
+    if(this.checkLoss() && this.modifiers.noHardDrop()) {
       return;
     }
     var { player } = this;
