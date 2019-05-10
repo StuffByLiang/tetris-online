@@ -685,7 +685,7 @@ class Game {
 
     //write modifiers
     var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage} = this.modifiers;
-    var modifiers;
+    var modifiers = "";
 
     if(increaseGravity) modifiers += "Gravity Increased, "
     if(randomColor) modifiers += "Random Color, "
@@ -693,7 +693,7 @@ class Game {
     if(cheeseGarbage) modifiers += "Cheese Garbage, "
     if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
 
-    document.getElementById("line").innerHTML += `<br>`
+    document.getElementById("line").innerHTML += "<br> Modifiers: " + modifiers;
   }
   clearMessage() {
     document.getElementById("line").innerHTML = "";
