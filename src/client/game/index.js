@@ -38,6 +38,7 @@ class Game {
         disableGhost: false,
         cheeseGarbage: false,
         oneGarbage: false,
+        noHardDrop: false,
         level: 1
       };
 
@@ -247,7 +248,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss()) {
+    if(this.checkLoss() && !this.modifiers.noHardDrop()) {
       return;
     }
     var { player } = this;
@@ -684,14 +685,16 @@ class Game {
     document.getElementById("line").innerHTML += message;
 
     //write modifiers
-    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage} = this.modifiers;
-    var modifiers = "";
+    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop} = this.modifiers;
+    var modifiers;
 
     if(increaseGravity) modifiers += "Gravity Increased, "
     if(randomColor) modifiers += "Random Color, "
     if(disableGhost) modifiers += "Ghost Disabled, "
     if(cheeseGarbage) modifiers += "Cheese Garbage, "
     if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
+    if(noHardDrop) modifiers += "No Hard Drop, "
+
 
     document.getElementById("line").innerHTML += "<br> Modifiers: " + modifiers;
   }
@@ -1039,6 +1042,15 @@ class Game {
       switch(random) {
         case 1:
           this.modifiers.cheeseGarbage = true;
+          break;
+      }
+    }
+
+    if(this.modifiers.level == 3) {
+      random = this.random(1, 1);
+      switch(random) {
+        case 1:
+          this.modifiers.noHardDrop = true;
           break;
       }
     }
