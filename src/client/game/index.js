@@ -719,7 +719,7 @@ class Game {
       this.bag[bagLength] = []; //blank array of pieces
       while (this.bag[bagLength].length < 7){
         var ranPiece = this.random(1,7);
-        this.bag[bagLength].push(getPieceLetter(ranPiece));
+        this.bag[bagLength].push(this.getPieceLetter(ranPiece));
       }
     }
   }
