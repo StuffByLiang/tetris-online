@@ -704,11 +704,24 @@ class Game {
   }
   // bag
   newBag() {
-    var bagLength = this.bag.length;
+    if (!this.modifiers.randomBag){
+      //this is the regular bag
+      var bagLength = this.bag.length;
 
-    this.bag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces
-    this.shuffleBag(this.bag[bagLength]); //shuffle bag
-    this.bag[bagLength] = this.bag[bagLength].join(','); //shuffle bag
+      this.bag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces
+      this.shuffleBag(this.bag[bagLength]); //shuffle bag
+      this.bag[bagLength] = this.bag[bagLength].join(','); //shuffle bag
+    }
+    else{
+      //this is no 7-piece bag
+      var bagLength = this.bag.length;
+
+      this.bag[bagLength] = []; //blank array of pieces
+      while (this.bag[bagLength].length < 7){
+        var ranPiece = this.random(1,7);
+        this.bag[bagLength].push(getPieceLetter(ranPiece));
+      }
+    }
   }
   shuffleBag(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
