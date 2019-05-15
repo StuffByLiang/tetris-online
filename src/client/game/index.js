@@ -710,9 +710,9 @@ class Game {
 
       this.bag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces
       this.shuffleBag(this.bag[bagLength]); //shuffle bag
-      this.bag[bagLength] = this.bag[bagLength].join(','); //shuffle bag
+      this.bag[bagLength] = this.bag[bagLength].join(',');
     }
-    else{
+    else if (this.modifiers.randomBag) {
       //this is no 7-piece bag
       var bagLength = this.bag.length;
 
@@ -721,6 +721,7 @@ class Game {
         var ranPiece = this.random(1,7);
         this.bag[bagLength].push(this.getPieceLetter(ranPiece));
       }
+      this.bag[bagLength] = this.bag[bagLength].join(',');
     }
   }
   shuffleBag(array) {
