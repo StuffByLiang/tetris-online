@@ -39,6 +39,7 @@ class Game {
         cheeseGarbage: false,
         oneGarbage: false,
         noHardDrop: false,
+        randomBag: false,
         level: 1
       };
 
@@ -748,6 +749,26 @@ class Game {
           console.log("no such piece available");
     }
   }
+  getPieceLetter(pieceNumber) {
+    switch(pieceNumber) {
+        case 1:
+            return 'S';
+        case 2:
+            return 'Z';
+        case 3:
+            return 'I';
+        case 4:
+            return 'T';
+        case 5:
+            return 'J';
+        case 6:
+            return 'L';
+        case 7:
+            return 'O';
+        default:
+          console.log("no such piece available");
+    }
+  }
   getPieceRotation(pieceName) {
     switch(pieceName) {
         case 'S':
@@ -1033,6 +1054,9 @@ class Game {
           break;
         case 6:
           this.modifiers.oneGarbage = true;
+          break;
+        case 6:
+          this.modifiers.randomBag = true;
           break;
       }
     }
