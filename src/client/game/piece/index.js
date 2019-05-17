@@ -1,4 +1,4 @@
-var Ghost = require('./../ghost/');
+import { Ghost } from '../ghost/'
 
 class Piece {
   constructor(player, x, y, pieceName, color, rotations) {
@@ -353,4 +353,5 @@ class Piece {
   }
 
 }
-module.exports = Piece;
+
+export {Piece}

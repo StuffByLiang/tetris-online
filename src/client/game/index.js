@@ -1,6 +1,5 @@
-var Piece = require('./piece/');
-var Send = require('./send/');
-var Player = require('../player/');
+import { Piece } from './piece/'
+import { Player } from '../player/'
 
 class Game {
   constructor(io) {
@@ -910,6 +909,7 @@ class Game {
       queue: queue,
       incoming: player.getTotalIncoming()
     }
+
     socket.emit("update", data);
 
     draw.clearCanvas(draw.boardCanvas);
@@ -934,7 +934,7 @@ class Game {
     //draw pieces
     myRotations = data.piece.rotation.split('|');
     for(var i = 0; i <= 3; i++) {
-        var xx, yy, coordinates;
+        var xx, yy, coordinates, color;
 
         coordinates = myRotations[i].split(',');
         xx = Number(coordinates[0]); //x pos of the block
@@ -1116,5 +1116,5 @@ class Game {
     settings.random = game.random(0, 9);
   }
 }
-window.game = new Game();
-// module.exports = Game;
+
+export { Game }

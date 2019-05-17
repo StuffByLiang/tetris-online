@@ -71,4 +71,4 @@ class Player {
     return linesSent;
   }
 }
-module.exports = Player;
+export { Player }

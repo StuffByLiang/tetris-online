@@ -45,4 +45,4 @@ class Ghost {
     return false;
   }
 }
-module.exports = Ghost;
+export { Ghost }

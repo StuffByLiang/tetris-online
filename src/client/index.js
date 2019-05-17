@@ -1,7 +1,8 @@
-import './init/';
-import './game/';
-import './player/';
-import './controls/'
-import './draw.js'
-import './draw/'
+// import './init/';
 import './settings/'
+import { Game } from './game/';
+import './controls/'
+import { Draw } from './draw/'
+
+window.game = new Game();
+window.draw = new Draw();
