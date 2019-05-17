@@ -1,4 +1,4 @@
-import { Ghost } from '../ghost/'
+import { Ghost } from './ghost/'
 
 class Piece {
   constructor(player, x, y, pieceName, color, rotations) {
