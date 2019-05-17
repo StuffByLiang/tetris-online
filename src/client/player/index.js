@@ -1,11 +1,11 @@
 class Player {
   constructor() {
     // this.id = id;
-    this.currentBag = 0;
-    this.currentPiece = 0;
-    this.currentPieceName = "";
-    this.canHold = true;
-    this.currentHoldPiece = "";
+    this.currentBag = 0; // the Current 7 piece bag that the player is on
+    this.currentPiece = 0; // the current piece in the bag that the player is on. ranges from 0-6
+    this.currentPieceName = ""; // piece Letter, eg L, J, S, Z, I, O
+    this.canHold = true; // Can the player hold?
+    this.currentHoldPiece = ""; // What piece is in hold?
     this.firstHold = false;
     this.b2b = false;
     this.tspinRotate = false;

@@ -8,8 +8,10 @@ class Ghost {
     this.angle = piece.angle;
     this.rotations = piece.rotations[piece.angle];
   }
-  //create event of the object
+  // create event of the object
   update() {
+    // this function sets the ghost piece's position to the current piece,
+    // then drops it as low as it can go on the board.
     this.x = this.piece.x;
     this.y = this.piece.y;
     this.angle = this.piece.angle;
@@ -20,15 +22,17 @@ class Ghost {
     }
   }
   checkDown() {
+    // check if there is a collision with another block IF the current ghost piece can't move down.
+
     var myRotations = this.rotations.split('|');
-    //check collision
+    // check collision
 
     for(var i=0; i <= 3; i++) {
         var coordinates = myRotations[i].split(',');
-        var xx = Number(coordinates[0]); //x pos of the block
-        var yy = Number(coordinates[1]); //y pos of the block
+        var xx = Number(coordinates[0]); // x pos of the block
+        var yy = Number(coordinates[1]); // y pos of the block
 
-        //first check if x or y is past border, return true if it is
+        // first check if x or y is past border, return true if it is
         if(this.x + xx < 0 ||
            this.x + xx > 9 ||
            this.y + yy + 1 < 0 ||
@@ -36,7 +40,7 @@ class Ghost {
             return true;
         }
 
-        //then check if the block is free near the piece, return true if there is collision
+        // then check if the block is free near the piece, return true if there is collision
         if(this.player.boardPosition[this.x + xx][this.y + yy + 1] !== 0){
             return true;
         }
