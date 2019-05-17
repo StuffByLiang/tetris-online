@@ -6,10 +6,10 @@ window.toggleSettings = function() {
     $('#settings-container').show();
 
     //Makes sure that the values of the shown in text boxes match settins
-    $("#das").val() = settings.das;
-    $("#arr").val() = settings.arr;
-    $("#gravity").val() = settings.gravity;
-    $("#softDrop").val() = settings.softDrop;
+    $("#das").val(settings.das);
+    $("#arr").val(settings.arr);
+    $("#gravity").val(settings.gravity);
+    $("#softDrop").val(settings.softDrop);
 
   }
 }
