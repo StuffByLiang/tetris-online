@@ -269,6 +269,7 @@ class Game {
 
       var { player } = this;
 
+
       //spawn a piece
       if(hold === undefined) {
         // check if a new bag needs to be created, if so, then create it
