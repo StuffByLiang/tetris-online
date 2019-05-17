@@ -132,6 +132,7 @@
     <script src="/js/client.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script>
       var socket = io();
       var id, env;
@@ -264,15 +265,6 @@
       })
 
       $('#settings-container').hide()
-
-      function toggleSettings() {
-        var isOpen = $('#settings-container').is(":visible");
-        if(isOpen) {
-          $('#settings-container').hide();
-        } else {
-          $('#settings-container').show();
-        }
-      }
 
       socket.on('b2bTSD', function(data) {
         var {id, num} = data;
