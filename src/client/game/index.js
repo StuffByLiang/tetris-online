@@ -23,51 +23,50 @@ class Game {
     if(!player.begin) {
       player.begin = true;
 
-      if(settings.myNameIsMeidy) {
-        game.meidy();
-        clearInterval(settings.meidy);
-        settings.meidy = setInterval(function() {
-          game.meidy()
-        }, 20000);
-      }
-
-      //reset modifierse
-      this.modifiers = {
-        increaseGravity: false,
-        randomColor: false,
-        disableGhost: false,
-        cheeseGarbage: false,
-        oneGarbage: false,
-        noHardDrop: false,
-        level: 1
-      };
-
       // player = new playerObject();W
       player.startTime = (new Date).getTime(); //set the time in which game starts
-
-      //reset modifiers
-      if(env.modifiers) {
-        settings.gravity = 1000;
-        clearInterval(this.randomModifierInterval);
-        this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
-      }
 
       this.spawnPiece();
     }
   }
   reset() {
-    if(this.player == null) {
-      return;
+    if(this.player != null) {
+      $('#otherPlayerCanvas').html("");
+
+      var {player} = this;
+
+      this.bag = []
+      //if game piece exists
+      clearInterval(player.piece.interval);
+      player.piece = null;
     }
 
-    $('#otherPlayerCanvas').html("");
+    if(settings.myNameIsMeidy) {
+      game.meidy();
+      clearInterval(settings.meidy);
+      settings.meidy = setInterval(function() {
+        game.meidy()
+      }, 20000);
+    }
 
-    var {player} = this;
+    //reset modifiers
+    if(env.modifiers) {
+      settings.gravity = 1000;
+      clearInterval(this.randomModifierInterval);
+      this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
+    }
 
-    this.bag = []
-    //if game piece exists
-    clearInterval(player.piece.interval);
-    player.piece = null;
+    //reset modifiers
+    this.modifiers = {
+      increaseGravity: false,
+      randomColor: false,
+      disableGhost: false,
+      cheeseGarbage: false,
+      oneGarbage: false,
+      noHardDrop: false,
+      noHold: false,
+      level: 1
+    };
 
   }
   checkLoss() {
@@ -248,7 +247,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss() && this.modifiers.noHardDrop()) {
+    if(this.checkLoss() || this.modifiers.noHardDrop) {
       return;
     }
     var { player } = this;
@@ -686,7 +685,7 @@ class Game {
 
     //write modifiers
     var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop} = this.modifiers;
-    var modifiers;
+    var modifiers="";
 
     if(increaseGravity) modifiers += "Gravity Increased, "
     if(randomColor) modifiers += "Random Color, "
@@ -1013,7 +1012,7 @@ class Game {
     var random;
 
     if(this.modifiers.level == 1) {
-      random = this.random(1, 6);
+      random = this.random(1, 7);
       switch(random) {
         case 1:
           //change gravity to be faster
@@ -1031,8 +1030,14 @@ class Game {
         case 4:
           this.modifiers.cheeseGarbage = true;
           break;
-        case 6:
+        case 5:
           this.modifiers.oneGarbage = true;
+          break;
+        case 6:
+          this.modifiers.noHardDrop = true;
+          break;
+        case 7:
+          this.modifiers.noHold = true;
           break;
       }
     }
