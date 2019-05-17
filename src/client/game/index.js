@@ -89,6 +89,7 @@ class Game {
     this.player.begin=false;
     $('.note').show();
   }
+  //actions
   moveLeft() {
     var { player } = this;
 
@@ -322,8 +323,8 @@ class Game {
 
       //set canHold = true because new piece has spawned
       if(hold === undefined)
-        if(!player.canHold && !player.firstHold) {
-            player.firstHold = true;
+        if(!player.canHold && !player.hasHold) {
+            player.hasHold = true;
         }else{
             player.canHold = true;
         }
@@ -334,7 +335,7 @@ class Game {
     console.log(player);
       //for the first time shift is pressed
       if(player.canHold){
-          if(!player.firstHold){
+          if(!player.hasHold){
               //set canShift = false until a new piece is spawned
               player.canHold = false;
               player.currentHoldPiece = player.currentPieceName;
@@ -702,7 +703,7 @@ class Game {
   clearMessage() {
     document.getElementById("line").innerHTML = "";
   }
-  // bag
+  //bag
   newBag() {
     if (!this.modifiers.randomBag){
       //this is the regular bag

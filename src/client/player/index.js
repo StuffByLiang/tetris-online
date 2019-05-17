@@ -6,14 +6,16 @@ class Player {
     this.currentPieceName = ""; // piece Letter, eg L, J, S, Z, I, O
     this.canHold = true; // Can the player hold?
     this.currentHoldPiece = ""; // What piece is in hold?
-    this.firstHold = false;
-    this.b2b = false;
-    this.tspinRotate = false;
-    this.combo = 0;
-    this.linesSent = 0;
-    this.incoming = [];
-    this.boardPosition = [ [], [] ]; //2d array
+    this.hasHold = false; // does the player have a hold currently?
+    this.b2b = false; // true if player has done a tetris/tspin
+    this.tspinRotate = false; // true if a tspin rotate has been done to aid in checking for tspins
+    this.combo = 0; // consecutive lines cleared. reset to 0.
+    this.linesSent = 0; // total lines sent in the game
+    this.incoming = []; // array of incoming lines
+    this.boardPosition = [ [], [] ]; //2d array of board position.
     this.pressed = {}; //pressed keys
+
+    // unused
     this.begin = false;
     this.startTime = 0;
     this.linesSentRecord = "";
@@ -41,9 +43,11 @@ class Player {
     return this.pressed[move] === undefined ? false: true;
   }
   addToIncoming(lines) {
+      //add number of lines to incoming lines
       this.incoming.push(lines);
   }
   getTotalIncoming() {
+    //get total amount of incoming lines
     if(this.incoming.length === undefined) {
       return;
     }
@@ -57,6 +61,7 @@ class Player {
     return total;
   }
   reduceGarbage(linesSent) {
+    //this is to cancel garbage
     var {player} = game;
   	for (var i = 0; i < player.incoming.length; i++){
   		if (linesSent > player.incoming[i]){
