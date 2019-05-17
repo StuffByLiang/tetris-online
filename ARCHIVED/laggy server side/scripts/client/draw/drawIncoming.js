@@ -5,9 +5,9 @@ window.draw.drawIncoming = function(totalIncoming) {
 
   ctx.fillStyle = 'red';
 
-  if(totalIncoming > 19) {
+  if(totalIncoming > 22) {
       ctx.fillRect(0, 1, 4, draw.playerIncomingCanvas.height);
   } else {
-      ctx.fillRect(0, 1 + draw.playerIncomingCanvas.height - (totalIncoming * 24), 4, 1 + draw.playerIncomingCanvas.height - ((20-totalIncoming) * 24));
+      ctx.fillRect(0, 1 + draw.playerIncomingCanvas.height - (totalIncoming * 24), 4, 1 + draw.playerIncomingCanvas.height - (totalIncoming * 24));
   }
 }

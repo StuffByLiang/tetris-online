@@ -117,10 +117,10 @@
             <div class="setTab" id="settings-tab">
                 <h2>Game settings</h2>
                 <div id="game_settings">
-                  DAS: <input size="10" id="DAS" type="text" value="133"><br>
-                  ARR: <input size="10" id="DAS" type="text" value="10"><br>
-                  Gravity: <input size="10" id="DAS" type="text" value="1000"><br>
-                  softDrop: <input size="10" id="DAS" type="text" value="10"><br>
+                  DAS: <input size="10" id="das" type="text" value=0><br>
+                  ARR: <input size="10" id="arr" type="text" value=0><br>
+                  Gravity: <input size="10" id="gravity" type="text" value=0><br>
+                  softDrop: <input size="10" id="softDrop" type="text" value=0><br>
                 </div>
             </div>
         </div>
@@ -129,9 +129,12 @@
         <button id="resetSettings">Reset Settings</button>
     </div>
 
-    <script src="/js/client.js"></script>
+    <!-- dependencies -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+
+    <script src="/js/client.js"></script>
     <script>
       var socket = io();
       var id, env;
@@ -264,19 +267,6 @@
       })
 
       $('#settings-container').hide()
-
-      function toggleSettings() {
-        var isOpen = $('#settings-container').is(":visible");
-        if(isOpen) {
-          $('#settings-container').hide();
-        } else {
-          $('#settings-container').show();
-        }
-      }
-
-      function savingSettings() {
-        $('#settings-container').hide();
-      }
 
       socket.on('b2bTSD', function(data) {
         var {id, num} = data;

@@ -1,76 +1,35 @@
-import { Piece } from '../piece/'
-import { Player } from '../player/'
+var Piece = require('./piece/');
+var Send = require('./send/');
 
 class Game {
   constructor(io) {
     this.io = io;
-    this.player = null;
+    this.players = [];
     this.bag = [];
-    this.id = null;
-    this.randomModiferInterval = null;
-
-    this.modifiers = null;
 
     //this.send = new Send();
   }
-  start() {
-    this.reset();
-    this.player = new Player();
-
-    var {player} = this;
-
-    if(!player.begin) {
+  getPlayer(id) {
+    return this.players[id];
+  }
+  start(player) {
+    if(this.checkLoss(player) || !player.begin) {
       player.begin = true;
+      if(player.piece) {
+        //if game piece exists
+        clearInterval(player.piece.interval);
+        player.piece = null;
+      }
 
       // player = new playerObject();W
       player.startTime = (new Date).getTime(); //set the time in which game starts
 
-      this.spawnPiece();
+      this.spawnPiece(player);
+      // game.drawQueue();
+      // game.drawHold();
     }
   }
-  reset() {
-    if(this.player != null) {
-      $('#otherPlayerCanvas').html("");
-
-      var {player} = this;
-
-      this.bag = []
-      //if game piece exists
-      clearInterval(player.piece.interval);
-      player.piece = null;
-    }
-
-    if(settings.myNameIsMeidy) {
-      game.meidy();
-      clearInterval(settings.meidy);
-      settings.meidy = setInterval(function() {
-        game.meidy()
-      }, 20000);
-    }
-
-    //reset modifiers
-    if(env.modifiers) {
-      settings.gravity = 1000;
-      clearInterval(this.randomModifierInterval);
-      this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
-    }
-
-    //reset modifiers
-    this.modifiers = {
-      increaseGravity: false,
-      randomColor: false,
-      disableGhost: false,
-      cheeseGarbage: false,
-      oneGarbage: false,
-      noHardDrop: false,
-      noHold: false,
-      level: 1
-    };
-
-  }
-  checkLoss() {
-    //returns true or false if the dude lost or not
-    var { player } = this;
+  checkLoss(player) {
     var check = false;
     for(var y = 0; y <= 1; y++){
         for(var x = 3; x <=6; x++){
@@ -82,17 +41,8 @@ class Game {
 
     return check;
   }
-  loss() {
-    console.log("YOU FUCKING LOST");
-    socket.emit('died');
-    game.losingGray();
-    this.player.begin=false;
-    $('.note').show();
-  }
-  moveLeft() {
-    var { player } = this;
-
-    player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this) , settings.das);
+  moveLeft(player) {
+    player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this, player) , settings.das);
     //check if no collision left
     if(!player.piece.checkCollision(2)){
         player.piece.rotationLimit++; //lock down rotation limit
@@ -108,9 +58,7 @@ class Game {
     }
     delete player.pressed["moveRight"];
   }
-  doMoveLeft() {
-    var { player } = this;
-
+  doMoveLeft(player) {
     if(player.pressed["moveLeft"] > 0) {
         if(!player.piece.checkCollision(2)){
             player.tspinRotate = false; //not tspin if moved
@@ -120,12 +68,10 @@ class Game {
             player.piece.x--;
             player.piece.update();
         }
-        player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this), settings.arr);
+        player.canMoveLeft = setTimeout(this.doMoveLeft.bind(this, player), settings.arr);
     }
   }
-  rotateRight() {
-    var { player } = this;
-
+  rotateRight(player) {
     if(player.piece.canRotate(1)) {
 
         player.piece.rotationLimit++; //lock down rotation limit
@@ -144,10 +90,8 @@ class Game {
         player.piece.update();
     }
   }
-  moveRight() {
-    var { player } = this;
-
-    player.canMoveRight = setTimeout(this.doMoveRight.bind(this) , settings.das);
+  moveRight(player) {
+    player.canMoveRight = setTimeout(this.doMoveRight.bind(this, player) , settings.das);
     //check if no collision left
     if(!player.piece.checkCollision(0)){
         player.piece.rotationLimit++; //lock down rotation limit
@@ -163,9 +107,7 @@ class Game {
     }
     delete player.pressed["moveLeft"];
   }
-  doMoveRight() {
-    var { player } = this;
-
+  doMoveRight(player) {
     if(player.pressed["moveRight"] > 0) {
         if(!player.piece.checkCollision(0)){
             player.tspinRotate = false; //not tspin if moved
@@ -175,16 +117,14 @@ class Game {
             player.piece.x++;
             player.piece.update();
         }
-        player.canMoveRight = setTimeout(this.doMoveRight.bind(this), settings.arr);
+        player.canMoveRight = setTimeout(this.doMoveRight.bind(this, player), settings.arr);
     }
   }
-  softDrop() {
-    var { player } = this;
-
+  softDrop(player) {
     //check if no collision down
     if(!player.piece.checkCollision(1)){
         clearInterval(player.piece.interval);
-        player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.softDrop);
+        player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
 
         player.piece.y++;
 
@@ -203,9 +143,7 @@ class Game {
         player.piece.update();
     }
   }
-  rotateLeft() {
-    var { player } = this;
-
+  rotateLeft(player) {
     if(player.piece.canRotate(-1)) {
 
         player.piece.rotationLimit++; //lock down rotation limit
@@ -224,33 +162,7 @@ class Game {
         player.piece.update();
     }
   }
-  rotateHalf() {
-    var { player } = this;
-
-    if(player.piece.canRotate(2)) {
-
-        player.piece.rotationLimit++; //lock down rotation limit
-        clearTimeout(player.piece.lockDownTimer);
-        player.piece.lockDownTimer = false;
-
-        player.piece.angle +=2 ;
-        if(player.piece.angle > 3){
-            player.piece.angle -= 4;
-        }
-
-        player.tspinRotate = true; //detect rotate
-
-        player.piece.lockdown();
-
-        player.piece.update();
-    }
-  }
-  hardDrop() {
-    if(this.checkLoss() || this.modifiers.noHardDrop) {
-      return;
-    }
-    var { player } = this;
-
+  hardDrop(player) {
     //check if no collision left
     while(!player.piece.checkCollision(1)) {
         player.tspinRotate = false; //reset tspin
@@ -259,15 +171,9 @@ class Game {
     player.piece.update();
     player.piece.die();
   }
-  spawnPiece(hold) {
-      if(this.checkLoss()) {
-        return;
-      }
-
-      var { player } = this;
-
-
+  spawnPiece(player, hold) {
       //spawn a piece
+
       if(hold === undefined) {
         // check if a new bag needs to be created, if so, then create it
         if(this.bag[player.currentBag + 1] == undefined)
@@ -292,8 +198,6 @@ class Game {
       rotations = this.getPieceRotation(player.currentPieceName);
       color = this.getPieceNumber(player.currentPieceName);
 
-      if(this.modifiers.randomColor) color = this.random(1,7);
-
       player.piece = new Piece(player, 3, -1, player.currentPieceName, color, rotations); //create piece
 
       //set gravity if down is pressed
@@ -301,7 +205,7 @@ class Game {
           //check if no collision down and if so, set soft drop
           if(!player.piece.checkCollision(1)){
               clearInterval(player.piece.interval);
-              player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.softDrop);
+              player.piece.interval = setInterval(player.piece.doGravity.bind(player.piece), settings.gravity);
           }
       }
 
@@ -329,9 +233,7 @@ class Game {
         }
 
   }
-  hold() {
-    var { player } = this;
-    console.log(player);
+  hold(player) {
       //for the first time shift is pressed
       if(player.canHold){
           if(!player.firstHold){
@@ -345,7 +247,7 @@ class Game {
               player.piece.lockDownTimer = false;
 
               //spawn a new piece
-              this.spawnPiece();
+              this.spawnPiece(player);
 
           }else {
               //set canShift = false until a new piece is spawned
@@ -362,15 +264,14 @@ class Game {
 
               //now spawn piece
 
-              this.spawnPiece("hold");
+              this.spawnPiece(player, "hold");
           }
       }
   }
-  clearLines() {
-    var { player } = this;
+  clearLines(player) {
       var cleared = 0;
 
-      var tspin = game.checkTspin();
+      var tspin = game.checkTspin(player);
       //clear lines
 
       //loop through rows, starting from the bottom
@@ -411,15 +312,14 @@ class Game {
           player.combo++;
       }else{
           player.combo = 0;
-          game.applyGarbage(); //apply garbage if no lines have been sent
+          game.applyGarbage(player); //apply garbage if no lines have been sent
       }
 
-      game.linesSent(cleared, tspin); //send line function which also recognizes line clears
+      game.linesSent(player, cleared, tspin); //send line function which also recognizes line clears
 
       player.tspinRotate = false; //reset tspin
   }
-  checkTspin() {
-    var { player } = this;
+  checkTspin(player) {
       if(player.currentPieceName == "T"){
           var corner = [false, false, false, false];
           //check if last sucesssful movement is not a rotate
@@ -471,11 +371,7 @@ class Game {
       }
       return "not";
   }
-  linesSent(cleared, tspin) {
-    var { player } = this
-
-    var b2bTSD = false;
-
+  linesSent(player, cleared, tspin) {
       var message = "";
       var linesSent = 0;
       //send combo lines
@@ -530,32 +426,31 @@ class Game {
 
           //calculate back to backs
           if(player.b2b == true && cleared == 4){
-              linesSent += 5;
+              linesSent += 6;
               message += "Back to back TETRIS!!!<BR>";
           }else if(player.b2b == true && tspin != "not"){
-            if(tspin == "mini" && cleared < 2) {
-              linesSent += 1;
-              message += "Back to back T-spin mini!!!<BR>";
-            } else if(tspin == "tspin" || tspin == "mini") {
-              switch(cleared){
-                  case 1:
-                      linesSent += 3;
-                      message += "Back to back T-spin single!!!<BR>";
-                      break;
-                  case 2:
-                      linesSent += 5;
-                      message += "Back to back T-spin double!!!<BR>";
-                      if(env.b2bTSD) {
-                        b2bTSD = true;
-                      }
-
-                      break;
-                  case 3:
-                      linesSent += 7;
-                      message += "Back to back T-spin triple!!!<BR>";
-                      break;
+             switch(tspin){
+              case "mini":
+                      linesSent += 2;
+                      message += "Back to back T-spin mini!!!<BR>";
+                  break;
+              case "tspin":
+                  switch(cleared){
+                      case 1:
+                          linesSent += 3;
+                          message += "Back to back T-spin single!!!<BR>";
+                          break;
+                      case 2:
+                          linesSent += 6;
+                          message += "Back to back T-spin double!!!<BR>";
+                          break;
+                      case 3:
+                          linesSent += 9;
+                          message += "Back to back T-spin triple!!!<BR>";
+                          break;
+                  }
+                  break;
               }
-            }
           }else{
 
               //send lines depending on lines cleared
@@ -582,58 +477,39 @@ class Game {
               }
 
               //send lines depending on tspin
-              if(tspin == "mini" && cleared < 2) {
-                if(cleared > 0){
-                    linesSent += 0;
-                    player.b2b = true;
-                }
-                message += "T-spin mini<BR>";
-              } else if(tspin =="tspin" || tspin == "mini") {
-                switch(cleared){
-                    case 1:
-                        linesSent += 2;
-                        message += "T-spin single!<BR>";
-                        break;
-                    case 2:
-                        linesSent += 3;
-                        message += "T-spin double!!!<BR>";
-                        if(env.b2bTSD) b2bTSD = true;
-                        break;
-                    case 3:
-                        linesSent += 4;
-                        message += "T-spin triple!!!!!<BR>";
-                        break;
-                }
-                player.b2b = true;
+              switch(tspin){
+                  case "mini":
+                      if(cleared > 0){
+                          linesSent += 1;
+                          player.b2b = true;
+                      }
+                      message += "T-spin mini<BR>";
+                      break;
+                  case "tspin":
+                      switch(cleared){
+                          case 1:
+                              linesSent += 2;
+                              message += "T-spin single!<BR>";
+                              break;
+                          case 2:
+                              linesSent += 3;
+                              message += "T-spin double!!!<BR>";
+                              break;
+                          case 3:
+                              linesSent += 4;
+                              message += "T-spin triple!!!!!<BR>";
+                              break;
+                      }
+                      player.b2b = true;
+                      break;
               }
           }
       }
 
-      if(linesSent > 1 && settings.handicap) {
-        linesSent = 1;
-      }
-      if(linesSent >= 1 && settings.myNameIsMeidy) {
-        linesSent *= 4;
-        if(linesSent > 10) linesSent = 10;
-      }
-
       player.linesSent += linesSent;
 
-      if(env.b2bTSD) {
-        linesSent = 0;
-        if(cleared>0 && !b2bTSD) {
-          this.loss();
-          return;
-        } else if(b2bTSD) {
-          player.stats.b2bTSD++;
-          socket.emit('b2bTSD', player.stats.b2bTSD);
-          linesSent = 3;
-        }
-        message += "Total Back to Back Tspin Doubles: " + player.stats.b2bTSD + "<br>";
-      }
-
       if(cleared > 0){
-          game.recordLinesSent(linesSent); //record lines sent
+          game.recordLinesSent(player, linesSent); //record lines sent
       }
 
       message += "lines sent: " + linesSent + "<br>";
@@ -643,28 +519,24 @@ class Game {
         message: message
       }
 
-      linesSent = player.reduceGarbage(linesSent);
+      // if(linesSent > 0 && linesSent < player.incoming) {
+      //   player.incoming -= linesSent;
+      //   linesSent=0;
+      // } else if(linesSent > 0 && linesSent > player.incoming) {
+      //   linesSent -= player.incoming
+      //   player.incoming = ;
+      // }
 
-      console.log(linesSent)
-      if(linesSent > 0) {
-        socket.emit('linesSent', linesSent);
-      }
+      this.io.to(player.id).emit("linesSent", data);
 
-      // this.io.to(player.id).emit("linesSent", data);
-
-      this.clearMessage();
-      this.writeMessage(message);
-
-      // //actually send lines
-      // this.iterate(otherPlayer => {
-      //   //send to player if not self
-      //   if(otherPlayer.id != player.id && linesSent > 0)
-      //     otherPlayer.addToIncoming(linesSent);
-      // });
+      //actually send lines
+      this.iterate(otherPlayer => {
+        //send to player if not self
+        if(otherPlayer.id != player.id && linesSent > 0)
+          otherPlayer.addToIncoming(linesSent);
+      });
   }
-  losingGray() {
-    var {player} = game;
-
+  losingGray(player) {
     for(var y = 0; y <= 21; y++){
         for(var x = 0; x <=9; x++){
             if(player.boardPosition[x][y] != 0){
@@ -672,57 +544,37 @@ class Game {
             }
         }
     }
-    game.draw();
+    game.draw(player)
   }
-  clean() {
-    var { player } = this;
+  clean(player) {
     // when need to delete, we need to clear all intervals
     clearInterval(player.piece.interval);
   }
-  //message
-  writeMessage(message) {
-    document.getElementById("line").innerHTML += message;
-
-    //write modifiers
-    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop, noHold, randomBag} = this.modifiers;
-    var modifiers = "";
-
-    if(increaseGravity) modifiers += "Gravity Increased, "
-    if(randomColor) modifiers += "Random Color, "
-    if(disableGhost) modifiers += "Ghost Disabled, "
-    if(cheeseGarbage) modifiers += "Cheese Garbage, "
-    if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
-    if(noHardDrop) modifiers += "No Hard Drop, "
-    if(noHold) modifiers += "No Hold, "
-    if(randomBag) modifiers += "Random Pieces, "
-
-
-    document.getElementById("line").innerHTML += "<br> Modifiers: " + modifiers;
+  iterate(callback) {
+    //iterate through all players with a callback function
+    for(var playerId in this.players) {
+      var player = this.getPlayer(playerId);
+      callback(player);
+    }
   }
-  clearMessage() {
-    document.getElementById("line").innerHTML = "";
+
+  //garbage
+  applyGarbage(player) {
+      for(var lines of player.incoming) {
+        game.addGarbage(player, lines);
+      }
+
+      player.incoming = [];
+      // game.draw(player);
   }
+
   // bag
   newBag() {
-    if (!this.modifiers.randomBag){
-      //this is the regular bag
-      var bagLength = this.bag.length;
+    var bagLength = this.bag.length;
 
-      this.bag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces
-      this.shuffleBag(this.bag[bagLength]); //shuffle bag
-      this.bag[bagLength] = this.bag[bagLength].join(',');
-    }
-    else if (this.modifiers.randomBag) {
-      //this is no 7-piece bag
-      var bagLength = this.bag.length;
-
-      this.bag[bagLength] = []; //blank array of pieces
-      while (this.bag[bagLength].length < 7){
-        var ranPiece = this.random(1,7);
-        this.bag[bagLength].push(this.getPieceLetter(ranPiece));
-      }
-      this.bag[bagLength] = this.bag[bagLength].join(',');
-    }
+    this.bag[bagLength] = ["S", "Z", "I", "T", "J", "L", "O"]; //all pieces
+    this.shuffleBag(this.bag[bagLength]); //shuffle bag
+    this.bag[bagLength] = this.bag[bagLength].join(','); //shuffle bag
   }
   shuffleBag(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
@@ -742,6 +594,7 @@ class Game {
 
     return array;
   }
+
   //other functions
   getPieceNumber(pieceName) {
     switch(pieceName) {
@@ -759,26 +612,6 @@ class Game {
             return 6;
         case 'O':
             return 7;
-        default:
-          console.log("no such piece available");
-    }
-  }
-  getPieceLetter(pieceNumber) {
-    switch(pieceNumber) {
-        case 1:
-            return 'S';
-        case 2:
-            return 'Z';
-        case 3:
-            return 'I';
-        case 4:
-            return 'T';
-        case 5:
-            return 'J';
-        case 6:
-            return 'L';
-        case 7:
-            return 'O';
         default:
           console.log("no such piece available");
     }
@@ -843,11 +676,6 @@ class Game {
       return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
   }
   getPieceColor(piece) {
-
-    // if(this.modifiers.randomColor) {
-    //   piece = 8; // sets ghost piece to gray
-    // }
-
     switch(piece){
         case 1:
             return "#69BE28";
@@ -867,10 +695,10 @@ class Game {
             return "#696969";
     }
   }
+
   //draw
-  draw() {
+  draw(player) {
     // console.log(player);
-    var { player } = this;
 
     var queue = [],
         playerCurrentPiece = player.currentPiece,
@@ -892,7 +720,7 @@ class Game {
     }
 
     var data = {
-      id: this.id,
+      id: player.id,
       ghost: {
         y: player.piece.ghost.y,
         color: player.piece.ghost.color
@@ -908,52 +736,11 @@ class Game {
       queue: queue,
       incoming: player.getTotalIncoming()
     }
-
-    socket.emit("update", data);
-
-    draw.clearCanvas(draw.boardCanvas);
-    draw.drawGrid(draw.boardCanvas, 24);
-
-    //ghost piece
-    var myRotations = data.piece.rotation.split('|');
-    draw.clearCanvas(draw.boardCanvas);
-
-    if(!this.modifiers.disableGhost)
-    for(var i = 0; i <= 3; i++) {
-        var xx, yy, coordinates;
-
-        coordinates = myRotations[i].split(',');
-        xx = Number(coordinates[0]); //x pos of the block
-        yy = Number(coordinates[1]); //y pos of the block
-
-        draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.ghost.y) * 24, xx, yy, data.ghost.color, draw.boardCanvas, 24);
-    }
-
-
-    //draw pieces
-    myRotations = data.piece.rotation.split('|');
-    for(var i = 0; i <= 3; i++) {
-        var xx, yy, coordinates, color;
-
-        coordinates = myRotations[i].split(',');
-        xx = Number(coordinates[0]); //x pos of the block
-        yy = Number(coordinates[1]); //y pos of the block
-
-        color = draw.getPieceColor(data.piece.color);
-
-        draw.makeBlock(1 + (data.piece.x) * 24, 1 + (data.piece.y) * 24, xx, yy, color, draw.boardCanvas, 24);
-    }
-
-    draw.drawBoard(draw.boardCanvas, data.boardPosition, 24);
-
-    draw.drawHold(data.hold);
-    draw.drawQueue(data.queue);
-    draw.drawIncoming(data.incoming)
+    this.io.emit("update", data);
   }
-  //record
-  recordBoardPosition() {
-    var { player } = this;
 
+  //record
+  recordBoardPosition(player) {
       //record board
       var tempstring = "";
       var time = 0;
@@ -976,9 +763,7 @@ class Game {
 
       player.boardPositionRecord += tempstring;
   }
-  recordLinesSent(lines) {
-    var { player } = this;
-
+  recordLinesSent(player, lines) {
       //record board
       var tempstring = "";
       var time = 0;
@@ -993,11 +778,10 @@ class Game {
 
       player.linesSentRecord += tempstring;
   }
-  //garbage
-  addGarbage(linesSent) {
-    var { player } = this;
 
-      var random = this.random(0,9);  // get random number from 0-9
+  //garbage
+  addGarbage(player, linesSent) {
+      var random = Math.floor(Math.random() * 10)  // get random number from 0-9
       //move every row up
 
       for(var y = 0; y <= 20; y++) {
@@ -1008,118 +792,21 @@ class Game {
       }
 
       for(var y = 0; y< linesSent; y++){
-        if(this.modifiers.cheeseGarbage) random = this.random(0, 9); //if cheeseGarbage modifier is true, set random each line
-        if(settings.myNameIsMeidy) random = settings.random;
-
-        if(!this.modifiers.oneGarbage){
-          //this is normal one
-           for(var x = 0; x<= 9; x++){
-            player.boardPosition[x][21-y] = 8; //sets it to be full
+      	for(var x = 0; x<= 9; x++){
+            player.boardPosition[x][21-y] = 8;
           }
-          //on the bottom row, remove a random block
-          player.boardPosition[random][21-y] = 0;
-        }
-
-        else {
-          for(var x = 0; x<= 9; x++){
-            player.boardPosition[x][21-y] = 0; //sets it to be empty
-          }
-          //on the bottom row, add a random block
-          player.boardPosition[random][21-y] = 8;
-        }
+        player.boardPosition[random][21-y] = 0;
       }
+
       player.piece.update();
   }
-  applyGarbage() {
-    var { player } = this;
-
-    if(player.incoming.length === undefined) {
-      return;
-    }
-
+  applyGarbage(player) {
     for(var lines of player.incoming) {
-      game.addGarbage(lines);
+      game.addGarbage(player, lines);
     }
 
     player.incoming = [];
   }
-  applyRandomModifier() {
-    console.log('Applied Random Modifer');
 
-    var random;
-
-    if(this.modifiers.level == 1) {
-      random = this.random(1, 8);
-      switch(random) {
-        case 1:
-          //change gravity to be faster
-          settings.gravity = 100;
-          this.modifiers.increaseGravity = true;
-          break;
-        case 2:
-          //get random colors for each pieces
-          this.modifiers.randomColor = true;
-          break;
-        case 3:
-          //disable ghost piece
-          this.modifiers.disableGhost = true;
-          break;
-        case 4:
-          this.modifiers.cheeseGarbage = true;
-          break;
-        case 5:
-          this.modifiers.oneGarbage = true;
-          break;
-        case 6:
-          this.modifiers.noHardDrop = true;
-          break;
-        case 7:
-          this.modifiers.noHold = true;
-          break;
-        case 8:
-          this.modifierse.randomBag = true;
-          break;
-      }
-    }
-
-    if(this.modifiers.level == 2) {
-      random = this.random(1, 1);
-      switch(random) {
-        case 1:
-          this.modifiers.randomBag = true;
-          break;
-      }
-    }
-
-    if(this.modifiers.level == 3) {
-      random = this.random(1, 1);
-      switch(random) {
-        case 1:
-          this.modifiers.noHardDrop = true;
-          break;
-      }
-    }
-
-    if(this.modifiers.level == 4) {
-      random = this.random(1, 1);
-      switch(random) {
-        case 1:
-          this.modifiers.oneGarbage = true;
-          break;
-      }
-    }
-
-    // this.modifiers.level++;
-  }
-  random(min, max) {
-    //gives a random integer from min to max
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-  meidy() {
-    settings.random = game.random(0, 9);
-  }
 }
-
-export { Game }
+module.exports = Game;

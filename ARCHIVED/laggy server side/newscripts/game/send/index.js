@@ -6,3 +6,4 @@ class Send {
 
   }
 }
+module.exports = Send;

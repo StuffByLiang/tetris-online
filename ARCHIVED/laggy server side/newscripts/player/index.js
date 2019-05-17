@@ -1,6 +1,6 @@
 class Player {
-  constructor() {
-    // this.id = id;
+  constructor(id) {
+    this.id = id;
     this.currentBag = 0;
     this.currentPiece = 0;
     this.currentPieceName = "";
@@ -19,10 +19,6 @@ class Player {
     this.linesSentRecord = "";
     this.boardPositionRecord = "";
 
-    this.stats = {
-      b2bTSD: 0
-    }
-
     //sets up boardPosition
     for(var x = -1; x <= 10; x++) {// every row
       this.boardPosition[x] = [];
@@ -38,16 +34,12 @@ class Player {
   }
   isPressed(move) {
     // returns if the key correlated to the move is currently being pressed
-    return this.pressed[move] === undefined ? false: true;
+    return this.pressed[move] === undefined ? true : false;
   }
   addToIncoming(lines) {
       this.incoming.push(lines);
   }
   getTotalIncoming() {
-    if(this.incoming.length === undefined) {
-      return;
-    }
-
     var total=0;
 
     for(var number of this.incoming) {
@@ -55,20 +47,6 @@ class Player {
     }
 
     return total;
-  }
-  reduceGarbage(linesSent) {
-    var {player} = game;
-  	for (var i = 0; i < player.incoming.length; i++){
-  		if (linesSent > player.incoming[i]){
-  			linesSent -= player.incoming[i];
-  			player.incoming.shift();
-        i--;
-      } else if (linesSent < player.incoming[i]){
-  			player.incoming[i] -= linesSent;
-  			linesSent = 0;
-  		}
-  	}
-    return linesSent;
-  }
+  };
 }
-export { Player }
+module.exports = Player;

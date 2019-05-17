@@ -16,7 +16,7 @@ class Piece {
       this.lowestLine = 0;
       this.rotationLimit = 0;
 
-      this.interval = setInterval(this.doGravity.bind(this), settings.gravity);
+      this.interval = setInterval(this.doGravity.bind(this), 1000);
       this.lockDownTimer = false;
 
       var color = game.getPieceColor(color);
@@ -25,19 +25,12 @@ class Piece {
   update() {
       //update this piece and draw it
       this.ghost.update();
-      game.draw();
+      game.draw(this.player);
   }
   doGravity() {
-    console.log("lol")
-    var {player} = this;
       //check if no collision down
       if(!this.checkCollision(1)){
-          this.y++; //move down
-
-          //if settings.gravity is 0 (instadrop) do a while loop here and down button is pressed
-          while(settings.softDrop==0 && !this.checkCollision(1) && player.isPressed('softDrop')) {
-            this.y++;
-          }
+          this.y++;
 
           //reset lockdown timer and rotation limit if reach a new lowest line
           if(this.y > this.lowestLine){
@@ -101,14 +94,15 @@ class Piece {
 
           }
 
-          game.clearLines();
+          game.clearLines(this.player);
 
-          game.recordBoardPosition();
+          game.recordBoardPosition(this.player);
 
-          if(game.checkLoss()) {
-            game.loss();
+          if(game.checkLoss(this.player)) {
+            console.log("YOU FUCKING LOST");
+            game.losingGray(this.player);
           } else {
-            game.spawnPiece();
+            game.spawnPiece(this.player);
           }
       }
   }
@@ -168,16 +162,16 @@ class Piece {
 
   }
   canRotate(direction) {
-      //check rotation -1 = counter clockwise 1 rotate 180 = 2
+      //check rotation -1 = counter clockwise 1
       var futureRotation, myRotations;
 
       futureRotation = this.angle + direction;
 
       if(futureRotation < 0){
-          futureRotation += 4;
+          futureRotation = 3;
       }
       if(futureRotation > 3){
-          futureRotation -= 4;
+          futureRotation = 0;
       }
 
       //now check rotation

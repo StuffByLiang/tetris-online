@@ -50,91 +50,52 @@ window.draw = {
     },
     drawS : function(x, y, canvasType, width) {
         //draw S
-        var color = "#69BE28";
-
-        if(game.modifiers.randomColor) {
-            color = "#ED2939";
-        }
-        this.makeBlock(x, y, 2, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 0, 2, color, canvasType, width);
+        this.makeBlock(x, y, 2, 1, "#69BE28", canvasType, width);
+        this.makeBlock(x, y, 1, 1, "#69BE28", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#69BE28", canvasType, width);
+        this.makeBlock(x, y, 0, 2, "#69BE28", canvasType, width);
     },
     drawZ : function(x, y, canvasType, width) {
         //draw Z
-
-        var color = "#ED2939";
-
-        if(game.modifiers.randomColor) {
-            color = "#69BE28";
-        }
-        this.makeBlock(x, y, 0, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 2, 2, color, canvasType, width);
+        this.makeBlock(x, y, 0, 1, "#ED2939", canvasType, width);
+        this.makeBlock(x, y, 1, 1, "#ED2939", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#ED2939", canvasType, width);
+        this.makeBlock(x, y, 2, 2, "#ED2939", canvasType, width);
     },
     drawI : function(x, y, canvasType, width) {
         //draw I
-
-        var color = "#009FDA";
-
-        if(game.modifiers.randomColor) {
-            color = "#FECB00";
-        }
-        this.makeBlock(x, y, 0, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 1, color, canvasType, width);
-        this.makeBlock(x, y, 2, 1, color, canvasType, width);
-        this.makeBlock(x, y, 3, 1, color, canvasType, width);
+        this.makeBlock(x, y, 0, 1, "#009FDA", canvasType, width);
+        this.makeBlock(x, y, 1, 1, "#009FDA", canvasType, width);
+        this.makeBlock(x, y, 2, 1, "#009FDA", canvasType, width);
+        this.makeBlock(x, y, 3, 1, "#009FDA", canvasType, width);
     },
     drawT : function(x, y, canvasType, width) {
         //draw T
-
-        var color = "#952D98";
-
-        if(game.modifiers.randomColor) {
-            color = "#009FDA";
-        }
-        this.makeBlock(x, y, 1, 1, color, canvasType, width);
-        this.makeBlock(x, y, 0, 2, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 2, 2, color, canvasType, width);
+        this.makeBlock(x, y, 1, 1, "#952D98", canvasType, width);
+        this.makeBlock(x, y, 0, 2, "#952D98", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#952D98", canvasType, width);
+        this.makeBlock(x, y, 2, 2, "#952D98", canvasType, width);
     },
     drawJ : function(x, y, canvasType, width) {
         //draw L
-
-        var color = "#0065BD";
-
-        if(game.modifiers.randomColor) {
-            color = "#FF7900";
-        }
-        this.makeBlock(x, y, 0, 1, color, canvasType, width);
-        this.makeBlock(x, y, 0, 2, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 2, 2, color, canvasType, width);
+        this.makeBlock(x, y, 0, 1, "#0065BD", canvasType, width);
+        this.makeBlock(x, y, 0, 2, "#0065BD", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#0065BD", canvasType, width);
+        this.makeBlock(x, y, 2, 2, "#0065BD", canvasType, width);
     },
     drawL : function(x, y, canvasType, width) {
         //draw L
-        var color = "#FF7900";
-
-        if(game.modifiers.randomColor) {
-            color = "#0065BD";
-        }
-        this.makeBlock(x, y, 2, 1, color, canvasType, width);
-        this.makeBlock(x, y, 0, 2, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 2, 2, color, canvasType, width);
+        this.makeBlock(x, y, 2, 1, "#FF7900", canvasType, width);
+        this.makeBlock(x, y, 0, 2, "#FF7900", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#FF7900", canvasType, width);
+        this.makeBlock(x, y, 2, 2, "#FF7900", canvasType, width);
     },
     drawO : function(x, y, canvasType, width) {
         //draw O
-        var color = "#FECB00";
-
-        if(game.modifiers.randomColor) {
-            color = "#952D98";
-        }
-        this.makeBlock(x, y, 1, 1, color, canvasType, width);
-        this.makeBlock(x, y, 1, 2, color, canvasType, width);
-        this.makeBlock(x, y, 2, 1, color, canvasType, width);
-        this.makeBlock(x, y, 2, 2, color, canvasType, width);
+        this.makeBlock(x, y, 1, 1, "#FECB00", canvasType, width);
+        this.makeBlock(x, y, 1, 2, "#FECB00", canvasType, width);
+        this.makeBlock(x, y, 2, 1, "#FECB00", canvasType, width);
+        this.makeBlock(x, y, 2, 2, "#FECB00", canvasType, width);
     },
     clearCanvas : function(canvasType) {
         var ctx = canvasType.getContext("2d");
