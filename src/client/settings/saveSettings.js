@@ -5,4 +5,6 @@ window.saveSettings = function() {
   settings.arr = $("#arr").val();
   settings.gravity = $("#gravity").val();
   settings.softDrop = $("#softDrop").val();
+
+  toggleSettings(); //closes settings box
 }

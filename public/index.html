@@ -274,10 +274,6 @@
         }
       }
 
-      function savingSettings() {
-        $('#settings-container').hide();
-      }
-
       socket.on('b2bTSD', function(data) {
         var {id, num} = data;
         $(`#${id}-info`).html("B2B TSPINS: " + num);
