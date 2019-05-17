@@ -28,7 +28,6 @@ class Piece {
       game.draw();
   }
   doGravity() {
-    console.log("lol")
     var {player} = this;
       //check if no collision down
       if(!this.checkCollision(1)){
