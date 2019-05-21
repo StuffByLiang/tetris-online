@@ -68,7 +68,7 @@ class Player {
   			linesSent -= player.incoming[i];
   			player.incoming.shift();
         i--;
-      } else if (linesSent < player.incoming[i]){
+      } else if (linesSent <= player.incoming[i]){
   			player.incoming[i] -= linesSent;
   			linesSent = 0;
   		}
