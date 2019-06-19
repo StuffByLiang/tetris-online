@@ -1,5 +1,4 @@
-window.draw.getPieceColor = function(piece) {
-
+module.exports =  function(piece) {
   switch(piece){
       case 1:
           return "#69BE28";

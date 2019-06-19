@@ -82,11 +82,12 @@ io.on('connection', function(socket){
 
   socket.on('linesSent', function(data) {
     if(!game.started) return;
+    if(useramount==1) return;
     var player;
 
     do {
       player = game.getRandomPlayer();
-    } while(player.id == socket.id && useramount > 1 && player.alive)
+    } while(player.id == socket.id || !player.alive)
 
     socket.broadcast.to(player.id).emit('recieveLines', data);
   })

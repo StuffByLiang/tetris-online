@@ -1,6 +1,5 @@
-var Piece = require('./piece/');
-var Send = require('./send/');
-var Player = require('../player/');
+import { Piece } from '../piece/'
+import { Player } from '../player/'
 
 class Game {
   constructor(io) {
@@ -23,52 +22,50 @@ class Game {
     if(!player.begin) {
       player.begin = true;
 
-      if(settings.myNameIsMeidy) {
-        game.meidy();
-        clearInterval(settings.meidy);
-        settings.meidy = setInterval(function() {
-          game.meidy()
-        }, 20000);
-      }
-
-      //reset modifierse
-      this.modifiers = {
-        increaseGravity: false,
-        randomColor: false,
-        disableGhost: false,
-        cheeseGarbage: false,
-        oneGarbage: false,
-        noHardDrop: false,
-        randomBag: false,
-        level: 2
-      };
-
       // player = new playerObject();W
       player.startTime = (new Date).getTime(); //set the time in which game starts
-
-      //reset modifiers
-      if(env.modifiers) {
-        settings.gravity = 1000;
-        clearInterval(this.randomModifierInterval);
-        this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
-      }
 
       this.spawnPiece();
     }
   }
   reset() {
-    if(this.player == null) {
-      return;
+    if(this.player != null) {
+      $('#otherPlayerCanvas').html("");
+
+      var {player} = this;
+
+      this.bag = []
+      //if game piece exists
+      clearInterval(player.piece.interval);
+      player.piece = null;
     }
 
-    $('#otherPlayerCanvas').html("");
+    if(settings.myNameIsMeidy) {
+      game.meidy();
+      clearInterval(settings.meidy);
+      settings.meidy = setInterval(function() {
+        game.meidy()
+      }, 20000);
+    }
 
-    var {player} = this;
+    //reset modifiers
+    if(env.modifiers) {
+      settings.gravity = 1000;
+      clearInterval(this.randomModifierInterval);
+      this.randomModiferInterval = setInterval(this.applyRandomModifier.bind(this), 7 * 1000);
+    }
 
-    this.bag = []
-    //if game piece exists
-    clearInterval(player.piece.interval);
-    player.piece = null;
+    //reset modifiers
+    this.modifiers = {
+      increaseGravity: false,
+      randomColor: false,
+      disableGhost: false,
+      cheeseGarbage: false,
+      oneGarbage: false,
+      noHardDrop: false,
+      noHold: false,
+      level: 1
+    };
 
   }
   checkLoss() {
@@ -92,6 +89,7 @@ class Game {
     this.player.begin=false;
     $('.note').show();
   }
+  //actions
   moveLeft() {
     var { player } = this;
 
@@ -249,7 +247,7 @@ class Game {
     }
   }
   hardDrop() {
-    if(this.checkLoss() && this.modifiers.noHardDrop()) {
+    if(this.checkLoss() || this.modifiers.noHardDrop) {
       return;
     }
     var { player } = this;
@@ -268,6 +266,7 @@ class Game {
       }
 
       var { player } = this;
+
 
       //spawn a piece
       if(hold === undefined) {
@@ -324,8 +323,8 @@ class Game {
 
       //set canHold = true because new piece has spawned
       if(hold === undefined)
-        if(!player.canHold && !player.firstHold) {
-            player.firstHold = true;
+        if(!player.canHold && !player.hasHold) {
+            player.hasHold = true;
         }else{
             player.canHold = true;
         }
@@ -336,7 +335,7 @@ class Game {
     console.log(player);
       //for the first time shift is pressed
       if(player.canHold){
-          if(!player.firstHold){
+          if(!player.hasHold){
               //set canShift = false until a new piece is spawned
               player.canHold = false;
               player.currentHoldPiece = player.currentPieceName;
@@ -686,8 +685,8 @@ class Game {
     document.getElementById("line").innerHTML += message;
 
     //write modifiers
-    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop, randomBag} = this.modifiers;
-    var modifiers;
+    var {increaseGravity, randomColor, disableGhost, cheeseGarbage, oneGarbage, noHardDrop, noHold, randomBag} = this.modifiers;
+    var modifiers = "";
 
     if(increaseGravity) modifiers += "Gravity Increased, "
     if(randomColor) modifiers += "Random Color, "
@@ -695,6 +694,7 @@ class Game {
     if(cheeseGarbage) modifiers += "Cheese Garbage, "
     if(oneGarbage) modifiers += "One Solid Garbage Per Line, "
     if(noHardDrop) modifiers += "No Hard Drop, "
+    if(noHold) modifiers += "No Hold, "
     if(randomBag) modifiers += "Random Pieces, "
 
 
@@ -703,7 +703,7 @@ class Game {
   clearMessage() {
     document.getElementById("line").innerHTML = "";
   }
-  // bag
+  //bag
   newBag() {
     if (!this.modifiers.randomBag){
       //this is the regular bag
@@ -909,6 +909,7 @@ class Game {
       queue: queue,
       incoming: player.getTotalIncoming()
     }
+
     socket.emit("update", data);
 
     draw.clearCanvas(draw.boardCanvas);
@@ -933,7 +934,7 @@ class Game {
     //draw pieces
     myRotations = data.piece.rotation.split('|');
     for(var i = 0; i <= 3; i++) {
-        var xx, yy, coordinates;
+        var xx, yy, coordinates, color;
 
         coordinates = myRotations[i].split(',');
         xx = Number(coordinates[0]); //x pos of the block
@@ -1049,7 +1050,7 @@ class Game {
     var random;
 
     if(this.modifiers.level == 1) {
-      random = this.random(1, 6);
+      random = this.random(1, 8);
       switch(random) {
         case 1:
           //change gravity to be faster
@@ -1071,7 +1072,13 @@ class Game {
           this.modifiers.oneGarbage = true;
           break;
         case 6:
-          this.modifiers.randomBag = true;
+          this.modifiers.noHardDrop = true;
+          break;
+        case 7:
+          this.modifiers.noHold = true;
+          break;
+        case 8:
+          this.modifierse.randomBag = true;
           break;
       }
     }
@@ -1106,6 +1113,7 @@ class Game {
     // this.modifiers.level++;
   }
   random(min, max) {
+    //gives a random integer from min to max
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1114,5 +1122,5 @@ class Game {
     settings.random = game.random(0, 9);
   }
 }
-window.game = new Game();
-// module.exports = Game;
+
+export { Game }

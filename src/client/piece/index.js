@@ -1,4 +1,4 @@
-var Ghost = require('./../ghost/');
+import { Ghost } from '../ghost/'
 
 class Piece {
   constructor(player, x, y, pieceName, color, rotations) {
@@ -31,7 +31,7 @@ class Piece {
     var {player} = this;
       //check if no collision down
       if(!this.checkCollision(1)){
-          this.y++;
+          this.y++; //move down
 
           //if settings.gravity is 0 (instadrop) do a while loop here and down button is pressed
           while(settings.softDrop==0 && !this.checkCollision(1) && player.isPressed('softDrop')) {
@@ -353,4 +353,5 @@ class Piece {
   }
 
 }
-module.exports = Piece;
+
+export {Piece}
